@@ -14,7 +14,7 @@ pip install .
 
 * Go back to folder ```serve``` (```cd ..```)
 * Download the model: wget https://download.pytorch.org/models/densenet161-8d451a50.pth
-* Create an archive file ```.mar```
+* Create an archive file ```.mar```. This is the file we use for deployment and it contains all the information needed in order to do this, e.g. the model script file and the state-dict of the model.
 ```
 torch-model-archiver --model-name densenet161 \  #  Encapsulated model name       
                        --version 1.0 \  #  Define version number (optional)
