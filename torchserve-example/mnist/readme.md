@@ -1,3 +1,4 @@
+# Torchserve only
 This example uses the MNIST dataset and the model used to classify the digits can be found here:
 ```https://github.com/pytorch/serve/tree/master/examples/image_classifier/mnist/mnist_cnn.pt```
 
@@ -32,4 +33,19 @@ Check available models:
 
 Make predictions (test images for mnist can be found here: https://github.com/pytorch/serve/tree/master/examples/image_classifier/mnist/test_data):
 ```curl http://127.0.0.1:8080/predictions/mnist -T 3.png```, output  ```3```
+
+# Web app
+
+* in folder ```deployment``` create a Dockerfile from ```pytorch/torchserve:latest```, which only copies the ```.mar``` file to the ```model-store``` folder. (Note: change latest to other version)
+    * build the image: ```build -t torchserve-mar:v1```
+* subfolder ```app```
+    * content: file ```app.py``` and subfolders ```templates``` and ```static```
+    * ```templates``` contains html content of app
+    * ```static``` is for saving the uploaded images
+    * ```app.py``` is script that creates the app to make predictions
+    * in folder ```app``` create Dockerfile to run the app
+    * build the image ```docker-build -t app:v1```
+* in folder ```deployment``` use ```docker-compose.yaml``` to run both services
+* start services with ```docker-compose up```
+* in browser go to ```localhost:9696```
 
