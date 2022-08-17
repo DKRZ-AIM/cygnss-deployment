@@ -1,0 +1,18 @@
+
+
+To run MLFLOW Server to change the state of the model
+
+	mlflow server    -p 5002 --backend-store-uri sqlite:///mlruns.db  --default-artifact-root s3://my-mlflow-bucket/
+
+	And, change the stage of any model that you like to production.
+
+Then we can Serve the registered model above by doing following: ( you can either put this in a bash file and run bash serve_ml_model.sh), or:
+
+	 export MLFLOW_TRACKING_URI=sqlite:///mlruns.db
+
+
+	mlflow models serve -m "models:/ElasticnetWineModel/Production"
+
+
+Run the UI -> Where updated model is getting used
+	streamlit run dashboard.py 
