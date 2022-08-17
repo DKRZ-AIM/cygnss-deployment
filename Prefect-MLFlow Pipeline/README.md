@@ -2,7 +2,9 @@
 
 Pipeline => Download the data, Train a model from scratch, evaluate it and log the model and scores to MLFlow
 
-Run this pipeline periodically and only if the model performance degrades then train the model else only evaluate the model and log the  performance
+Run this pipeline periodically and only if the model performance degrades then train the model else only evaluate the model and log the  performance.
+
+
 Deploy your best model to MLFlow and use it as an API
 
 TODO: handle failures

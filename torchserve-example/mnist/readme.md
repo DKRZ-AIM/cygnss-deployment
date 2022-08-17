@@ -37,7 +37,7 @@ Make predictions (test images for mnist can be found here: https://github.com/py
 # Web app
 
 * in folder ```deployment``` create a Dockerfile from ```pytorch/torchserve:latest```, which only copies the ```.mar``` file to the ```model-store``` folder. (Note: change latest to other version)
-    * build the image: ```build -t torchserve-mar:v1```
+    * build the image: ```docker build -t torchserve-mar:v1 .```
 * subfolder ```app```
     * content: file ```app.py``` and subfolders ```templates``` and ```static```
     * ```templates``` contains html content of app
