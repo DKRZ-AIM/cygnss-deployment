@@ -4,7 +4,7 @@
     "query":[
         {
             "datasetId":"PODAAC-CYGNS-L1X30",
-            "granuleIds":["cyg08.ddmi.s20180807-000000-e20180807-235959.l1.power-brcs.a30.d31.nc"],
+            "granuleIds":["cyg03.ddmi.s20220705-000000-e20220705-235959.l1.power-brcs.a30.d31.nc"],
             "variables":["sp_inc_angle"],
             "compact":false
         }
