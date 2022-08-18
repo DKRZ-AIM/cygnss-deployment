@@ -1,0 +1,3 @@
+torchserve-example/mnist/model-store/mnist.mar
+torchserve-example/mnist/app/__pycache__/*
+torchserve-example/mnist/app/static/test_data/*
