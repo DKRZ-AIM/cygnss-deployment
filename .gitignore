@@ -1,3 +1,10 @@
 torchserve-example/mnist/model-store/mnist.mar
 torchserve-example/mnist/app/__pycache__/*
 torchserve-example/mnist/app/static/test_data/*
+saved_models/*
+data/*
+notebooks/.ipynb_checkpoints/*
+__pycache__/*
+cycnss_frauke.sqlite-journal
+cycnss_test_frauke.sqlite
+notebooks/lightning_logs/*
