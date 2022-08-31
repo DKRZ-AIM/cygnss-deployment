@@ -87,10 +87,10 @@ client = init_connection()
 
 
 # drop database if exists, just to not clutter it with multiple values of data
-client.drop_database('cygnss')
+# client.drop_database('cygnss')
 
 # write data
-write_data()
+# write_data()
 
 # Fetching data
 items = get_data(date_)
@@ -98,6 +98,9 @@ items = get_data(date_)
 
 st.subheader('Results')
 # Print results.
+
+if len(items) == 0:
+        st.write(f" Data does not exist for this date. Choose a different date please!")
 for item in items:
         st.write(f"RMSE is: {item['rmse']} ")
         response = requests.get(item['image_url'])
