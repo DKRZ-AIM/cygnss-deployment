@@ -90,7 +90,7 @@ def main():
     data_path = '../../shared_data/2022-cygnss-deployment/small_data/' #'../data'
     h5_file = h5py.File(os.path.join(data_path, 'test_data.h5'), 'r', rdcc_nbytes=0)
 
-    mlflow.set_tracking_uri("sqlite:///mlflow.db") # future todo: change this to other db
+    mlflow.set_tracking_uri("sqlite:///mlruns.db") # future todo: change this to other db
     mlflow.set_experiment("cygnss")
 
     # global variables for MongoDB host (default port is 27017)
