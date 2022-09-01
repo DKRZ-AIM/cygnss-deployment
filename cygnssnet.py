@@ -28,8 +28,8 @@ from typing import Optional
 
 import sys
 sys.path.append('../../')
-import gfz_202003.utils.mathematics as mat
-import gfz_202003.utils.cygnss_utils as cutils
+import utils.mathematics as mat
+import utils.cygnss_utils as cutils
 
 
 class CyGNSSDataModule(pl.LightningDataModule):

@@ -1,6 +1,6 @@
 import numpy as np
 
-import gfz_202003.utils.constants as const
+import utils.constants as const
 
 def standard_scale(x, mean=None, scale=None, return_params=False):
     """
