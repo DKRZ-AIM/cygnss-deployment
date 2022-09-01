@@ -1,0 +1,25 @@
+name: iconml
+channels:
+  - defaults
+    #- pytorch
+dependencies:
+  - pandas
+  - matplotlib
+  - numpy
+  - sh
+  # platform basic requirement
+  - ipykernel=5.3.4
+  - xarray
+  - dask
+  - scipy
+  - h5py
+  - netcdf4
+  - pip
+
+  - pip:
+    # pin version
+    - torch==1.10.1+cu113
+    - pytorch-lightning==1.5.10
+    - cdsapi
+    - podaac-data-subscriber
+    - global-land-mask
