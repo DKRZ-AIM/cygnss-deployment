@@ -22,7 +22,8 @@ Create Jupyterhub kernel from this environment following https://docs.dkrz.de/do
 
 #### Earthdata
 
-Retrieve user ID and create `.netrc` as described in ...
+- Retrieve user ID and create `.netrc` as described in ...
+- change the persmission of the file: chmod og-rwx ~/.netrc
 
 #### ERA5
 
