@@ -22,7 +22,88 @@ sys.path.append('../../caroline/gitlab/2020-03-gfz-remote-sensing/')
 from cygnssnet import ImageNet, DenseNet, CyGNSSNet, CyGNSSDataModule, CyGNSSDataset
 import gfz_202003.utils.mathematics as mat
 
+
+def calculate_rmse():
+    
+    filename = "best_predictions.h5"
+
+    with h5py.File(filename, "r") as f:
+        # Print all root level object names (aka keys) 
+        # these can be group or dataset names 
+        print("Keys: %s" % f.keys())
+        # get first object name/key; may or may NOT be a group
+        a_group_key = list(f.keys())[0]
+
+        # get the object type for a_group_key: usually group or dataset
+        print(type(f[a_group_key])) 
+
+        # If a_group_key is a group name, 
+        # this gets the object names in the group and returns as a list
+        data = list(f[a_group_key])
+
+        # If a_group_key is a dataset name, 
+        # this gets the dataset values and returns as a list
+        data = list(f[a_group_key])
+        # preferred methods to get dataset values:
+        ds_obj = f[a_group_key]      # returns as a h5py dataset object
+        ds_arr = f[a_group_key][()]  # returns as a numpy array
+        
+        # Use True lable to calculate RMSE
+        return 0.7
+
 @task
+def is_model_degraded_condition():
+    rmse = calculate_rmse()
+    if rmse > 0.4:
+        return True
+    else:
+        return False  
+
+    
+
+    
+@task
+def write_data(client):
+        data_1 = {
+        "rmse": 3.1, 
+        "event_date":  datetime.datetime(2022, 8, 10),
+        "image_url": "https://www.dkrz.de/en/about-en/aufgaben/dkrz-and-climate-research/@@images/image/large"
+        }
+
+        data_2 = {
+        "rmse": 2.1,         
+        "event_date":  datetime.datetime(2022, 8, 9),
+        "image_url": "https://www.dkrz.de/en/about-en/aufgaben/dkrz-and-climate-research/@@images/image/large"
+        }
+
+        data_3 = {
+        "rmse": 3.2,         
+        "event_date":  datetime.datetime(2022, 8, 8),
+        "image_url": "https://www.dkrz.de/en/about-en/aufgaben/dkrz-and-climate-research/@@images/image/large"
+        }
+
+
+        cygnss_collection = client["cygnss"].cygnss_collection
+
+        cygnss_collection = cygnss_collection.insert_many([data_1, data_2, data_3])
+
+        print(f"Multiple tutorials: {cygnss_collection.inserted_ids}")
+
+@task
+def get_data(client):        
+        cygnss = client.cygnss                        
+        items = cygnss.cygnss_collection.find()        
+        items = list(items)  # make hashable for st.experimental_memo
+        for item in items:
+            print(f"RMSE is: {item['rmse']}")            
+        
+        
+@task
+def drop_database(client):
+    client.drop_database('cygnss')
+
+@task
+@st.experimental_singleton
 def mongo_db_connection(domain, port):
     # use a try-except indentation to catch MongoClient() errors
     try:
@@ -84,6 +165,12 @@ def save_to_db():
 @flow(task_runner=SequentialTaskRunner())
 def main():
 
+    # TODO
+    # download_data()
+    
+    # TODO
+    # pre_process()
+
     model_path = '/work/ka1176/shared_data/2022-cygnss-deployment/'\
             'cygnss_trained_model/ygambdos_yykDM/checkpoint'
     model = 'cygnssnet-epoch=0.ckpt'
@@ -124,10 +211,13 @@ def main():
     with mlflow.start_run():
         rmse = mean_squared_error(y, y_pred, squared=False)
         mlflow.log_metric('rmse', rmse)
-
     
-    # todo save results in db
-    # save_to_tb()
+    # save results in db    
+    client = mongo_db_connection()
+    drop_database(client)
+    write_data(client)
+    get_data(client)
+
 
 main()
 
