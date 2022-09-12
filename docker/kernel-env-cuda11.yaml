@@ -1,0 +1,23 @@
+name: cygnss-d
+channels:
+  - defaults
+  - pytorch
+dependencies:
+  - pandas
+  - matplotlib
+  - numpy
+  - xarray
+  - scipy
+  - h5py
+  - netcdf4
+  - cudatoolkit=11.3
+  - pytorch
+  - seaborn
+  - pip
+
+  - pip:
+    # pin version
+    - pytorch-lightning==1.5.10
+    - cdsapi
+    - podaac-data-subscriber
+    - global-land-mask

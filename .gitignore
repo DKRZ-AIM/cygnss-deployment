@@ -8,3 +8,8 @@ __pycache__/*
 cycnss_frauke.sqlite-journal
 cycnss_test_frauke.sqlite
 notebooks/lightning_logs/*
+utils/*
+lightning_logs/
+mlruns/*
+mlruns.db
+utils/mathematics.py
