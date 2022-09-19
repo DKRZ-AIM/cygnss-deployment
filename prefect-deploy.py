@@ -1,4 +1,5 @@
 import os
+from pydoc import cli
 import sys
 import time
 import numpy as np
@@ -12,54 +13,18 @@ from collections import namedtuple
 import xarray
 import mlflow
 from prefect import flow, task
-from prefect.deployments import DeploymentSpec
-from prefect.flow_runners import SubprocessFlowRunner
-from prefect.orion.schemas.schedules import IntervalSchedule
+import streamlit as st
+# TODO Fix these imports
+# from prefect.deployments import DeploymentSpec
+# from prefect.flow_runners import SubprocessFlowRunner
+# from prefect.orion.schemas.schedules import IntervalSchedule
 from prefect.task_runners import SequentialTaskRunner
 from pymongo import MongoClient, errors
+import datetime
+sys.path.append('./2020-03-gfz-remote-sensing')
+sys.path.append('./2020-03-gfz-remote-sensing/gfz_202003')
 
-sys.path.append('../../caroline/gitlab/2020-03-gfz-remote-sensing/')
 from cygnssnet import ImageNet, DenseNet, CyGNSSNet, CyGNSSDataModule, CyGNSSDataset
-import gfz_202003.utils.mathematics as mat
-
-
-def calculate_rmse():
-    
-    filename = "best_predictions.h5"
-
-    with h5py.File(filename, "r") as f:
-        # Print all root level object names (aka keys) 
-        # these can be group or dataset names 
-        print("Keys: %s" % f.keys())
-        # get first object name/key; may or may NOT be a group
-        a_group_key = list(f.keys())[0]
-
-        # get the object type for a_group_key: usually group or dataset
-        print(type(f[a_group_key])) 
-
-        # If a_group_key is a group name, 
-        # this gets the object names in the group and returns as a list
-        data = list(f[a_group_key])
-
-        # If a_group_key is a dataset name, 
-        # this gets the dataset values and returns as a list
-        data = list(f[a_group_key])
-        # preferred methods to get dataset values:
-        ds_obj = f[a_group_key]      # returns as a h5py dataset object
-        ds_arr = f[a_group_key][()]  # returns as a numpy array
-        
-        # Use True lable to calculate RMSE
-        return 0.7
-
-@task
-def is_model_degraded_condition():
-    rmse = calculate_rmse()
-    if rmse > 0.4:
-        return True
-    else:
-        return False  
-
-    
 
     
 @task
@@ -104,32 +69,55 @@ def drop_database(client):
 
 @task
 @st.experimental_singleton
-def mongo_db_connection(domain, port):
+def save_to_db(domain, port):
     # use a try-except indentation to catch MongoClient() errors
     try:
-        # try to instantiate a client instance
+        print('entering mongo db connection')
+        
+        # uncomment and if you wanna clear out the data
+        # client.drop_database('cygnss')
+        
         client = MongoClient(
-            host = [ str(domain) + ":" + str(port) ],
-            serverSelectionTimeoutMS = 3000, # 3 second timeout
-            #username = "root",
-            #password = "1234",
-        )
+        host = [ str(domain) + ":" + str(port) ],
+        serverSelectionTimeoutMS = 3000, # 3 second timeout
+        username = "root",
+        password = "example",
+    )
 
         # print the version of MongoDB server if connection successful
         print ("server version:", client.server_info()["version"])
 
-        # get the database_names from the MongoClient()
-        database_names = client.list_database_names()
+        data_1 = {
+        "rmse": 3.1, 
+        "event_date":  datetime.datetime(2022, 8, 10),
+        "image_url": "https://www.dkrz.de/en/about-en/aufgaben/dkrz-and-climate-research/@@images/image/large"
+        }
+
+        data_2 = {
+        "rmse": 2.1,         
+        "event_date":  datetime.datetime(2022, 8, 9),
+        "image_url": "https://www.dkrz.de/en/about-en/aufgaben/dkrz-and-climate-research/@@images/image/large"
+        }
+
+        data_3 = {
+        "rmse": 3.2,         
+        "event_date":  datetime.datetime(2022, 8, 8),
+        "image_url": "https://www.dkrz.de/en/about-en/aufgaben/dkrz-and-climate-research/@@images/image/large"
+        }
+
+
+        cygnss_collection = client["cygnss"].cygnss_collection
+
+        cygnss_collection = cygnss_collection.insert_many([data_1, data_2, data_3])
+
+        print(f"Multiple tutorials: {cygnss_collection.inserted_ids}")
 
     except errors.ServerSelectionTimeoutError as err:
         # set the client and DB name list to 'None' and `[]` if exception
         client = None
-        database_names = []
-
         # catch pymongo.errors.ServerSelectionTimeoutError
-        print ("pymongo ERROR:", err)
-
-    return client
+        print (err)
+    
 
 @task
 def get_hyper_params(model_path, model, data_path):
@@ -152,15 +140,11 @@ def get_backbone(args, input_shapes):
 @task 
 def make_predictions(test_loader, model):
     trainer = pl.Trainer(enable_progress_bar=False)
-
     trainer.test(model=model, dataloaders=test_loader)
     y_pred = trainer.predict(model=model, dataloaders=[test_loader])
     y_pred = torch.cat(y_pred).detach().cpu().numpy().squeeze()
     return y_pred
 
-@task
-def save_to_db():
-    pass
 
 @flow(task_runner=SequentialTaskRunner())
 def main():
@@ -170,21 +154,17 @@ def main():
     
     # TODO
     # pre_process()
-
-    model_path = '/work/ka1176/shared_data/2022-cygnss-deployment/'\
+    
+    model_path = './2022-cygnss-deployment/'\
             'cygnss_trained_model/ygambdos_yykDM/checkpoint'
     model = 'cygnssnet-epoch=0.ckpt'
-    data_path = '../../shared_data/2022-cygnss-deployment/small_data/' #'../data'
+    data_path = './2022-cygnss-deployment/small_data/' #'../data' # TODO, change the path outside of code, in a separete folder
     h5_file = h5py.File(os.path.join(data_path, 'test_data.h5'), 'r', rdcc_nbytes=0)
 
-    mlflow.set_tracking_uri("sqlite:///mlruns.db") # future todo: change this to other db
+    mlflow.set_tracking_uri("sqlite:///mlruns.db") # TODO: change this to other db
     mlflow.set_experiment("cygnss")
 
-    # global variables for MongoDB host (default port is 27017)
-    DOMAIN = 'localhost'
-    PORT = 27017
-    #client = mongo_db_connection(domain=DOMAIN, port=PORT)
-
+ 
     # get hyper parameters 
     args = get_hyper_params(model_path, model, data_path).result()
 
@@ -192,6 +172,7 @@ def main():
     cdm.setup(stage='test')
     input_shapes = cdm.get_input_shapes(stage='test')
     backbone = get_backbone(args, input_shapes).result()
+  
     # load model
     cygnss_model = CyGNSSNet.load_from_checkpoint(os.path.join(model_path, model),
                                            map_location=torch.device('cpu'), 
@@ -212,20 +193,19 @@ def main():
         rmse = mean_squared_error(y, y_pred, squared=False)
         mlflow.log_metric('rmse', rmse)
     
-    # save results in db    
-    client = mongo_db_connection()
-    drop_database(client)
-    write_data(client)
-    get_data(client)
+    # global variables for MongoDB host (default port is 27017)
+    DOMAIN = 'mongodb'
+    PORT = 27017
 
+    # Save results to the mongo database
+    save_to_db(domain=DOMAIN, port=PORT)
 
 main()
 
 # DeploymentSpec(
 #    flow=main,
-#    name="model_inference"
-#    schedule=IntervalSchedule(interval=timedelta(minutes=5)),
+#    name="model_inference",
 #    flow_runner=SubprocessFlowRunner(),
 #    tags=["cygnss"]
-#)
+# )
 
