@@ -20,12 +20,18 @@ import streamlit as st
 # from prefect.orion.schemas.schedules import IntervalSchedule
 from prefect.task_runners import SequentialTaskRunner
 from pymongo import MongoClient, errors
+from API import download_raw_data
 import datetime
 sys.path.append('./2020-03-gfz-remote-sensing')
 sys.path.append('./2020-03-gfz-remote-sensing/gfz_202003')
 
 from cygnssnet import ImageNet, DenseNet, CyGNSSNet, CyGNSSDataModule, CyGNSSDataset
 
+
+@task
+def download_data():
+    download_data_date = datetime.date.today() - datetime.timedelta(days=10)
+    download_raw_data(year = download_data_date.year, month = download_data_date.month, day = download_data_date.day)
     
 @task
 def write_data(client):
@@ -149,8 +155,8 @@ def make_predictions(test_loader, model):
 @flow(task_runner=SequentialTaskRunner())
 def main():
 
-    # TODO
-    # download_data()
+    # Download data for the past 10th day from today, today - 10th day
+    download_data()
     
     # TODO
     # pre_process()
