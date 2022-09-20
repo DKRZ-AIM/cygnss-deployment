@@ -67,8 +67,8 @@ if len(items) == 0:
         st.write(f" Data does not exist for this date. Choose a different date please!")
 for item in items:
         st.write(f"RMSE is: {item['rmse']} ")
-        response = requests.get(item['image_url'])
-        image = Image.open(BytesIO(response.content))
+        #response = requests.get(item['image_url'])
+        image = Image.open(item['image_path'])#Image.open(BytesIO(response.content))
 
         
         #displaying the image on streamlit app
