@@ -36,8 +36,9 @@ services:
       - "./../../:/app/"    
     ports:
       - "8501:8501"
-      - "5000:5000" 
+      - "5000:5000"   
     command: bash -c "python cygnss-deployment/prefect-deploy.py  && streamlit run cygnss-deployment/dashboard.py && mlflow ui -p 5000"      
+    #command: bash -c "streamlit run cygnss-deployment/dashboard.py && mlflow ui -p 5000" 
     depends_on:
     - mongodb
     networks:

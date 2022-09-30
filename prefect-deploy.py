@@ -11,20 +11,23 @@ from pytorch_lightning.callbacks.model_summary import ModelSummary
 from sklearn.metrics import mean_squared_error
 from collections import namedtuple
 import matplotlib.pyplot as plt
+from matplotlib import lines, colors, ticker
+import seaborn as sns
 import xarray
 import mlflow
 from prefect import flow, task
 import streamlit as st
 # TODO Fix these imports
-#from prefect.deployments import DeploymentSpec
-#from prefect.flow_runners import SubprocessFlowRunner
-#from prefect.orion.schemas.schedules import IntervalSchedule
+from prefect.deployments import DeploymentSpec
+from prefect.flow_runners import SubprocessFlowRunner
+from prefect.orion.schemas.schedules import IntervalSchedule
 from prefect.task_runners import SequentialTaskRunner
 from pymongo import MongoClient, errors
-from API import download_raw_data
-import datetime
+#from API import download_raw_data
+from datetime import datetime, timedelta
 sys.path.append('./2020-03-gfz-remote-sensing')
 sys.path.append('./2020-03-gfz-remote-sensing/gfz_202003')
+sys.path.append('./2020-03-gfz-remote-sensing/gfz_202003/training')
 
 from cygnssnet import ImageNet, DenseNet, CyGNSSNet, CyGNSSDataModule, CyGNSSDataset
 
@@ -76,7 +79,7 @@ def drop_database(client):
 
 @task
 @st.experimental_singleton
-def save_to_db(domain, port, y_pred, rmse, date):
+def save_to_db(domain, port, y_pred, rmse, date, all_rmse):
     # use a try-except indentation to catch MongoClient() errors
     try:
         print('entering mongo db connection')
@@ -96,27 +99,29 @@ def save_to_db(domain, port, y_pred, rmse, date):
 
         data_1 = {
         "rmse": 3.1, 
-        "event_date":  datetime.datetime(2022, 8, 10),
+        "event_date":  datetime(2022, 8, 10),
         "image_url": "https://www.dkrz.de/en/about-en/aufgaben/dkrz-and-climate-research/@@images/image/large"
         }
 
         data_2 = {
         "rmse": 2.1,         
-        "event_date":  datetime.datetime(2022, 8, 9),
+        "event_date":  datetime(2022, 8, 9),
         "image_url": "https://www.dkrz.de/en/about-en/aufgaben/dkrz-and-climate-research/@@images/image/large"
         }
 
         data_3 = {
         "rmse": 3.2,         
-        "event_date":  datetime.datetime(2022, 8, 8),
+        "event_date":  datetime(2022, 8, 8),
         "image_url": "https://www.dkrz.de/en/about-en/aufgaben/dkrz-and-climate-research/@@images/image/large"
         }
 
 
         data_4 = {
                 "rmse": rmse.tolist(),
+                "all_rmse": all_rmse.tolist(),
                 "event_date": date,
-                "image_path": f"{os.path.dirname(__file__)}/plots/test.png",
+                "scatterplot_path": f"{os.path.dirname(__file__)}/plots/scatter.png",
+                "histogram_path": f"{os.path.dirname(__file__)}/plots/histo.png",
                 #"y_pred": pymongo.binary.Binary( pickle.dumps(y_pred, protocol=2)))
                 }
 
@@ -160,34 +165,86 @@ def make_predictions(test_loader, model):
     return y_pred
 
 @task
-def make_plots(rmse):
-    # some example plot
-    fig, ax = plt.subplots()
+def rmse_bins(y_true, y_pred):
+    # Find the indices for the windspeed bins - below 12 m/s, below 16 m/s, above 16 m/s
+    y_bins = [4, 8, 12, 16, 20, 100]
+    y_ix   = np.digitize(y_true, y_bins, right=False)
 
-    fruits = ['apple', 'blueberry', 'cherry', 'orange']
-    counts = [40, 100, 30, 55]
-    bar_labels = ['red', 'blue', '_red', 'orange']
-    bar_colors = ['tab:red', 'tab:blue', 'tab:red', 'tab:orange']
+    all_rmse = np.zeros(len(y_bins))
+    all_bias = np.zeros(len(y_bins))
+    all_counts = np.zeros(len(y_bins))
 
-    ax.bar(fruits, counts, label=bar_labels, color=bar_colors)
+    for i, yy in enumerate(y_bins):
+        if np.any(y_ix==i):
+            rmse = mean_squared_error(y_true[y_ix==i], y_pred[y_ix==i], squared=False)
+            all_rmse[i] = rmse
+            all_bias[i] = np.mean(y_pred[y_ix==i] - y_true[y_ix==i])
+            all_counts[i] = np.sum(y_ix==i)
+        else:
+            all_rmse[i] = None
+            all_bias[i] = None
+            all_counts[i] = 0
+        return all_rmse
 
-    ax.set_ylabel('fruit supply')
-    ax.set_title('Fruit supply by kind and color')
-    ax.legend(title='Fruit color')
+@task
+def make_scatterplot(y_true, y_pred):
+    ymin = 2.5
+    ymax = 25.0
 
-    plt.savefig(f'{os.path.dirname(__file__)}/plots/test.png')
+    fig=plt.figure()
+    ax=fig.add_subplot(111)
+
+    img=ax.hexbin(y_true, y_pred, cmap='viridis', norm=colors.LogNorm(vmin=1, vmax=25000), mincnt=1)
+    clb=plt.colorbar(img)
+    clb.set_ticks([1, 10, 100, 1000, 10000])
+    clb.set_ticklabels([r'$1$', r'$10$', r'$10^2$', r'$10^3$', r'$10^4$'])
+    clb.set_label('Samples in bin')
+    clb.ax.tick_params()
+
+    ax.set_xlabel('ERA5 wind speed (m/s)')
+    ax.set_ylabel('Predicted wind speed (m/s)')
+
+    ax.plot(np.linspace(0, 30), np.linspace(0, 30), 'w:')
+
+    ax.set_ylim(ymin, 25)
+    ax.set_xlim(ymin, 25)
+
+    ax.set_xticks([5, 10, 15, 20, 25])
+    ax.set_xticklabels([5, 10, 15, 20, 25])
+    ax.set_yticks([5, 10, 15, 20, 25])
+    ax.set_yticklabels([5, 10, 15, 20, 25])
+
+    fig.tight_layout()
+    plt.savefig(f'{os.path.dirname(__file__)}/plots/scatter.png')
+
+@task 
+def make_histogram(y_true, y_pred):
+    fig=plt.figure()
+    ax=fig.add_subplot(111)
+
+    sns.histplot(y_true, ax=ax, color='C7', label='ERA5 wind speed (m/s)')
+    sns.histplot(y_pred, ax=ax, color='C2', label='Predicted wind speed (m/s)')
+
+    ax.legend(fontsize=12)
+
+    ax.set_xticks([5, 10, 15, 20, 25])
+    ax.set_xticklabels([5, 10, 15, 20, 25])
+    ax.set_xlabel('ERA5 wind speed (m/s)')
+    plt.savefig(f'{os.path.dirname(__file__)}/plots/histo.png')
 
 @flow(task_runner=SequentialTaskRunner())
 def main():
 
     # Download data for the past 10th day from today, today - 10th day
-    download_data()
+    #download_data()
     
     # TODO
     # pre_process()
 
     # TODO: get date from preprocessing
-    date = datetime.datetime(2022, 9, 10)
+    now = datetime.now()
+    date = datetime(now.year, now.month, now.day) - timedelta(days=10)
+    #date = datetime.datetime(2022, 9, 10)
     
     model_path = './2022-cygnss-deployment/'\
             'cygnss_trained_model/ygambdos_yykDM/checkpoint'
@@ -223,19 +280,21 @@ def main():
     y = dataset.y
 
     # calculate rmse
+    all_rmse = rmse_bins(y, y_pred)
     with mlflow.start_run():
         rmse = mean_squared_error(y, y_pred, squared=False)
         mlflow.log_metric('rmse', rmse)
    
     # make plots
-    make_plots(rmse)
+    make_scatterplot(y, y_pred)
+    make_histogram(y, y_pred)
 
     # global variables for MongoDB host (default port is 27017)
     DOMAIN = 'mongodb'
     PORT = 27017
 
     # Save results to the mongo database
-    save_to_db(domain=DOMAIN, port=PORT, y_pred=y_pred, rmse=rmse, date=date)
+    save_to_db(domain=DOMAIN, port=PORT, y_pred=y_pred, rmse=rmse, date=date, all_rmse=all_rmse)
 
 main()
 

@@ -24,7 +24,7 @@ def user_input_features():
         option = st.sidebar.selectbox('What would you like to see?', ('RMSE', 'Visualization'))
         date_ = st.sidebar.date_input("For which date you want to see the results", datetime.date.today() - datetime.timedelta(days=5), min_value = datetime.date(2021,1,1), max_value = datetime.date.today() - datetime.timedelta(days=5))
         st.write('', option)
-        return date_
+        return date_, option
 
 # Initialize connection.
 # Uses st.experimental_singleton to only run once.
@@ -47,7 +47,7 @@ def get_data(date_):
 
 # Creating UI
 st.subheader('User Input parameters')
-date_ = user_input_features()
+date_, option = user_input_features()
 st.write('Date:', date_)
 
 # Initializing connection
@@ -65,11 +65,19 @@ st.subheader('Results')
 # Display results.
 if len(items) == 0:
         st.write(f" Data does not exist for this date. Choose a different date please!")
-for item in items:
-        st.write(f"RMSE is: {item['rmse']} ")
-        #response = requests.get(item['image_url'])
-        image = Image.open(item['image_path'])#Image.open(BytesIO(response.content))
+if option == 'RMSE':
+    y_bins = [4, 8, 12, 16, 20, 100]
+    for item in items: # @harsh can this be more than 1 item?
+        st.write(f"RMSE is: {item['rmse']:.4f} m/s ")
+        for rmse, yb in zip(item['all_rmse'], y_bins):
+            st.write(f'RMSE for windspeed up to {yb:.4f} m/s: {rmse} m/s')
+if option == 'Visualization':
+    for item in items:
+    #response = requests.get(item['image_url'])
+        scatter = Image.open(item['scatterplot_path'])#Image.open(BytesIO(response.content))
+        st.markdown(f"## Scatterplot: ERA5 wind speed - model prediction")
+        st.image(scatter, caption='Visualization')
 
-        
-        #displaying the image on streamlit app
-        st.image(image, caption='Visualization')
+        histo = Image.open(item['histogram_path'])
+        st.markdown(f"## Histogram: ERA5 wind speed and predicted wind speed")
+        st.image(histo, caption='Visualisation')
