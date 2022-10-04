@@ -84,8 +84,7 @@ def save_to_db(domain, port, y_pred, rmse, date, all_rmse):
     try:
         print('entering mongo db connection')
         
-        # uncomment and if you wanna clear out the data
-        # client.drop_database('cygnss')
+     
         
         client = MongoClient(
         host = [ str(domain) + ":" + str(port) ],
@@ -94,26 +93,29 @@ def save_to_db(domain, port, y_pred, rmse, date, all_rmse):
         password = "example",
     )
 
+       # uncomment and if you wanna clear out the data
+        client.drop_database('cygnss')
+
         # print the version of MongoDB server if connection successful
         print ("server version:", client.server_info()["version"])
 
-        data_1 = {
-        "rmse": 3.1, 
-        "event_date":  datetime(2022, 8, 10),
-        "image_url": "https://www.dkrz.de/en/about-en/aufgaben/dkrz-and-climate-research/@@images/image/large"
-        }
+        # data_1 = {
+        # "rmse": 3.1, 
+        # "event_date":  datetime(2022, 8, 10),
+        # "image_url": "https://www.dkrz.de/en/about-en/aufgaben/dkrz-and-climate-research/@@images/image/large"
+        # }
 
-        data_2 = {
-        "rmse": 2.1,         
-        "event_date":  datetime(2022, 8, 9),
-        "image_url": "https://www.dkrz.de/en/about-en/aufgaben/dkrz-and-climate-research/@@images/image/large"
-        }
+        # data_2 = {
+        # "rmse": 2.1,         
+        # "event_date":  datetime(2022, 8, 9),
+        # "image_url": "https://www.dkrz.de/en/about-en/aufgaben/dkrz-and-climate-research/@@images/image/large"
+        # }
 
-        data_3 = {
-        "rmse": 3.2,         
-        "event_date":  datetime(2022, 8, 8),
-        "image_url": "https://www.dkrz.de/en/about-en/aufgaben/dkrz-and-climate-research/@@images/image/large"
-        }
+        # data_3 = {
+        # "rmse": 3.2,         
+        # "event_date":  datetime(2022, 8, 8),
+        # "image_url": "https://www.dkrz.de/en/about-en/aufgaben/dkrz-and-climate-research/@@images/image/large"
+        # }
 
 
         data_4 = {
@@ -127,7 +129,7 @@ def save_to_db(domain, port, y_pred, rmse, date, all_rmse):
 
         cygnss_collection = client["cygnss"].cygnss_collection
 
-        cygnss_collection = cygnss_collection.insert_many([data_1, data_2, data_3, data_4])
+        cygnss_collection = cygnss_collection.insert_many([data_4])
 
         print(f"Multiple tutorials: {cygnss_collection.inserted_ids}")
 
@@ -292,7 +294,7 @@ def main():
     # global variables for MongoDB host (default port is 27017)
     DOMAIN = 'mongodb'
     PORT = 27017
-
+    
     # Save results to the mongo database
     save_to_db(domain=DOMAIN, port=PORT, y_pred=y_pred, rmse=rmse, date=date, all_rmse=all_rmse)
 
