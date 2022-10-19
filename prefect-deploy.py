@@ -2,6 +2,7 @@ import os
 from pydoc import cli
 import sys
 import time
+import pandas as pd
 import numpy as np
 import h5py
 import torch
@@ -10,9 +11,9 @@ import pytorch_lightning as pl
 from pytorch_lightning.callbacks.model_summary import ModelSummary
 from sklearn.metrics import mean_squared_error
 from collections import namedtuple
-import matplotlib.pyplot as plt
-from matplotlib import lines, colors, ticker
-import seaborn as sns
+#import matplotlib.pyplot as plt
+#from matplotlib import lines, colors, ticker
+#import seaborn as sns
 import xarray
 import mlflow
 from prefect import flow, task
@@ -30,7 +31,7 @@ sys.path.append('./2020-03-gfz-remote-sensing/gfz_202003')
 sys.path.append('./2020-03-gfz-remote-sensing/gfz_202003/training')
 
 from cygnssnet import ImageNet, DenseNet, CyGNSSNet, CyGNSSDataModule, CyGNSSDataset
-
+import plots
 
 @task
 def download_data():
@@ -79,7 +80,7 @@ def drop_database(client):
 
 @task
 @st.experimental_singleton
-def save_to_db(domain, port, y_pred, rmse, date, all_rmse):
+def save_to_db(domain, port, y_pred, rmse, date, rmse_time):
     # use a try-except indentation to catch MongoClient() errors
     try:
         print('entering mongo db connection')
@@ -99,37 +100,29 @@ def save_to_db(domain, port, y_pred, rmse, date, all_rmse):
         # print the version of MongoDB server if connection successful
         print ("server version:", client.server_info()["version"])
 
-        # data_1 = {
-        # "rmse": 3.1, 
-        # "event_date":  datetime(2022, 8, 10),
-        # "image_url": "https://www.dkrz.de/en/about-en/aufgaben/dkrz-and-climate-research/@@images/image/large"
-        # }
-
-        # data_2 = {
-        # "rmse": 2.1,         
-        # "event_date":  datetime(2022, 8, 9),
-        # "image_url": "https://www.dkrz.de/en/about-en/aufgaben/dkrz-and-climate-research/@@images/image/large"
-        # }
-
-        # data_3 = {
-        # "rmse": 3.2,         
-        # "event_date":  datetime(2022, 8, 8),
-        # "image_url": "https://www.dkrz.de/en/about-en/aufgaben/dkrz-and-climate-research/@@images/image/large"
-        # }
-
-
-        data_4 = {
+        data = {
                 "rmse": rmse.tolist(),
-                "all_rmse": all_rmse.tolist(),
+                "bin_rmse": rmse_time["rmse"].tolist(),
+                "bin_bias": rmse_time["bias"].tolist(),
+                "bin_counts": rmse_time["counts"].tolist(),
+                "time": rmse_time["time"].tolist(),
                 "event_date": date,
                 "scatterplot_path": f"{os.path.dirname(__file__)}/plots/scatter.png",
                 "histogram_path": f"{os.path.dirname(__file__)}/plots/histo.png",
+                "era_average_path": f"{os.path.dirname(__file__)}/plots/era_average.png",
+                "rmse_average_path": f"{os.path.dirname(__file__)}/plots/rmse_average.png",
+                "today_longrunavg_path": f"{os.path.dirname(__file__)}/plots/today_longrunavg.png",
+                "today_long_bias_path": f"{os.path.dirname(__file__)}/plots/today_long_bias.png",
+                "sample_counts_path": f"{os.path.dirname(__file__)}/plots/sample_counts.png",
+                "rmse_bins_era_path": f"{os.path.dirname(__file__)}/plots/rmse_bins_era.png",
+                "bias_bins_era_path": f"{os.path.dirname(__file__)}/plots/bias_bins_era.png",
                 #"y_pred": pymongo.binary.Binary( pickle.dumps(y_pred, protocol=2)))
                 }
 
         cygnss_collection = client["cygnss"].cygnss_collection
 
-        cygnss_collection = cygnss_collection.insert_many([data_4])
+
+        cygnss_collection = cygnss_collection.insert_many([data])
 
         print(f"Multiple tutorials: {cygnss_collection.inserted_ids}")
 
@@ -146,9 +139,11 @@ def get_hyper_params(model_path, model, data_path):
     checkpoint = torch.load(os.path.join(model_path, model),
                     map_location=torch.device("cpu"))
     checkpoint['hyper_parameters']["data"] = data_path
+    col_idx_lat = checkpoint["hyper_parameters"]["v_par_eval"].index('sp_lat')
+    col_idx_lon = checkpoint["hyper_parameters"]["v_par_eval"].index('sp_lon')
     args = namedtuple("ObjectName", checkpoint['hyper_parameters'].keys())\
             (*checkpoint['hyper_parameters'].values())
-    return args 
+    return args, col_idx_lat, col_idx_lon 
 
 @task
 def get_backbone(args, input_shapes):
@@ -167,9 +162,8 @@ def make_predictions(test_loader, model):
     return y_pred
 
 @task
-def rmse_bins(y_true, y_pred):
+def rmse_bins(y_true, y_pred, y_bins):
     # Find the indices for the windspeed bins - below 12 m/s, below 16 m/s, above 16 m/s
-    y_bins = [4, 8, 12, 16, 20, 100]
     y_ix   = np.digitize(y_true, y_bins, right=False)
 
     all_rmse = np.zeros(len(y_bins))
@@ -186,53 +180,23 @@ def rmse_bins(y_true, y_pred):
             all_rmse[i] = None
             all_bias[i] = None
             all_counts[i] = 0
-        return all_rmse
+        df_rmse = pd.DataFrame(dict(rmse=all_rmse, bias=all_bias, bins=y_bins, counts=all_counts))
+        return df_rmse
 
 @task
-def make_scatterplot(y_true, y_pred):
-    ymin = 2.5
-    ymax = 25.0
+def rmse_over_time(y_bins, df_rmse):
+    # mock up data that represents the long running average rmse
+    df_rmse["time"] = "today"
+    
+    df_mockup = pd.DataFrame(dict(bins=y_bins, 
+                   rmse=df_rmse["rmse"] + np.random.rand(len(y_bins))-0.5, 
+                   bias=df_rmse["bias"] + np.random.rand(len(y_bins))-0.5,
+                   counts=df_rmse["counts"] * 1000))
+    df_mockup["time"] = "long-running average"
 
-    fig=plt.figure()
-    ax=fig.add_subplot(111)
+    df_mockup = pd.concat([df_rmse, df_mockup], ignore_index=True)
 
-    img=ax.hexbin(y_true, y_pred, cmap='viridis', norm=colors.LogNorm(vmin=1, vmax=25000), mincnt=1)
-    clb=plt.colorbar(img)
-    clb.set_ticks([1, 10, 100, 1000, 10000])
-    clb.set_ticklabels([r'$1$', r'$10$', r'$10^2$', r'$10^3$', r'$10^4$'])
-    clb.set_label('Samples in bin')
-    clb.ax.tick_params()
-
-    ax.set_xlabel('ERA5 wind speed (m/s)')
-    ax.set_ylabel('Predicted wind speed (m/s)')
-
-    ax.plot(np.linspace(0, 30), np.linspace(0, 30), 'w:')
-
-    ax.set_ylim(ymin, 25)
-    ax.set_xlim(ymin, 25)
-
-    ax.set_xticks([5, 10, 15, 20, 25])
-    ax.set_xticklabels([5, 10, 15, 20, 25])
-    ax.set_yticks([5, 10, 15, 20, 25])
-    ax.set_yticklabels([5, 10, 15, 20, 25])
-
-    fig.tight_layout()
-    plt.savefig(f'{os.path.dirname(__file__)}/plots/scatter.png')
-
-@task 
-def make_histogram(y_true, y_pred):
-    fig=plt.figure()
-    ax=fig.add_subplot(111)
-
-    sns.histplot(y_true, ax=ax, color='C7', label='ERA5 wind speed (m/s)')
-    sns.histplot(y_pred, ax=ax, color='C2', label='Predicted wind speed (m/s)')
-
-    ax.legend(fontsize=12)
-
-    ax.set_xticks([5, 10, 15, 20, 25])
-    ax.set_xticklabels([5, 10, 15, 20, 25])
-    ax.set_xlabel('ERA5 wind speed (m/s)')
-    plt.savefig(f'{os.path.dirname(__file__)}/plots/histo.png')
+    return df_mockup
 
 @flow(task_runner=SequentialTaskRunner())
 def main():
@@ -259,7 +223,7 @@ def main():
 
  
     # get hyper parameters 
-    args = get_hyper_params(model_path, model, data_path).result()
+    args, col_idx_lat, col_idx_lon  = get_hyper_params(model_path, model, data_path).result()
 
     cdm = CyGNSSDataModule(args)
     cdm.setup(stage='test')
@@ -282,21 +246,32 @@ def main():
     y = dataset.y
 
     # calculate rmse
-    all_rmse = rmse_bins(y, y_pred)
+    y_bins = [4, 8, 12, 16, 20, 100]
+    df_rmse = rmse_bins(y, y_pred, y_bins).result()
+    df_mockup = rmse_over_time(y_bins, df_rmse).result()
     with mlflow.start_run():
         rmse = mean_squared_error(y, y_pred, squared=False)
         mlflow.log_metric('rmse', rmse)
    
     # make plots
-    make_scatterplot(y, y_pred)
-    make_histogram(y, y_pred)
-
+    sp_lat = test_loader.dataset.v_par_eval[:, col_idx_lat]
+    sp_lon = test_loader.dataset.v_par_eval[:, col_idx_lon]
+    plots.make_scatterplot(y, y_pred)
+    plots.make_histogram(y, y_pred)
+    plots.era_average(y, sp_lon, sp_lat)
+    plots.rmse_average(y, y_pred, sp_lon, sp_lat)
+    plots.today_longrunavg(df_mockup, y_bins)
+    plots.today_longrunavg_bias(df_mockup, y_bins)
+    plots.sample_counts(df_rmse, y_bins)
+    plots.rmse_bins_era(df_rmse, y_bins)
+    plots.bias_bins_era(df_rmse, y_bins)
     # global variables for MongoDB host (default port is 27017)
     DOMAIN = 'mongodb'
     PORT = 27017
     
     # Save results to the mongo database
-    save_to_db(domain=DOMAIN, port=PORT, y_pred=y_pred, rmse=rmse, date=date, all_rmse=all_rmse)
+    save_to_db(domain=DOMAIN, port=PORT, y_pred=y_pred, \
+            rmse=rmse, date=date, rmse_time=df_mockup)
 
 main()
 
