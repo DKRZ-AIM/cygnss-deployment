@@ -70,7 +70,7 @@ if option == 'RMSE':
     for item in items: # @harsh can this be more than 1 item?
         st.write(f"Total RMSE is: {item['rmse']:.3f} m/s ")
         d = {'Windspeed': y_bins, 'RMSE': item['bin_rmse'], 'Bias': item['bin_bias'],\
-                'Counts': item['bin_counts'], 'Time': item['time']}
+                'Counts': [int(i) for i in item['bin_counts']]}
         df = pd.DataFrame(data=d)
         # hide first column (index) of the table
         hide_table_row_index = """

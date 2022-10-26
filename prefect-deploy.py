@@ -11,9 +11,6 @@ import pytorch_lightning as pl
 from pytorch_lightning.callbacks.model_summary import ModelSummary
 from sklearn.metrics import mean_squared_error
 from collections import namedtuple
-#import matplotlib.pyplot as plt
-#from matplotlib import lines, colors, ticker
-#import seaborn as sns
 import xarray
 import mlflow
 from prefect import flow, task
@@ -99,13 +96,12 @@ def save_to_db(domain, port, y_pred, rmse, date, rmse_time):
 
         # print the version of MongoDB server if connection successful
         print ("server version:", client.server_info()["version"])
-
+        
         data = {
                 "rmse": rmse.tolist(),
                 "bin_rmse": rmse_time["rmse"].tolist(),
                 "bin_bias": rmse_time["bias"].tolist(),
                 "bin_counts": rmse_time["counts"].tolist(),
-                "time": rmse_time["time"].tolist(),
                 "event_date": date,
                 "scatterplot_path": f"{os.path.dirname(__file__)}/plots/scatter.png",
                 "histogram_path": f"{os.path.dirname(__file__)}/plots/histo.png",
@@ -116,7 +112,7 @@ def save_to_db(domain, port, y_pred, rmse, date, rmse_time):
                 "sample_counts_path": f"{os.path.dirname(__file__)}/plots/sample_counts.png",
                 "rmse_bins_era_path": f"{os.path.dirname(__file__)}/plots/rmse_bins_era.png",
                 "bias_bins_era_path": f"{os.path.dirname(__file__)}/plots/bias_bins_era.png",
-                #"y_pred": pymongo.binary.Binary( pickle.dumps(y_pred, protocol=2)))
+                "y_pred": y_pred.tolist()
                 }
 
         cygnss_collection = client["cygnss"].cygnss_collection
@@ -195,7 +191,6 @@ def rmse_over_time(y_bins, df_rmse):
     df_mockup["time"] = "long-running average"
 
     df_mockup = pd.concat([df_rmse, df_mockup], ignore_index=True)
-
     return df_mockup
 
 @flow(task_runner=SequentialTaskRunner())
@@ -271,7 +266,7 @@ def main():
     
     # Save results to the mongo database
     save_to_db(domain=DOMAIN, port=PORT, y_pred=y_pred, \
-            rmse=rmse, date=date, rmse_time=df_mockup)
+            rmse=rmse, date=date, rmse_time=df_rmse)
 
 main()
 
