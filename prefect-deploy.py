@@ -217,7 +217,7 @@ def main():
     mlflow.set_experiment("cygnss")
 
  
-    # get hyper parameters 
+    # get hyperparameters 
     args, col_idx_lat, col_idx_lon  = get_hyper_params(model_path, model, data_path).result()
 
     cdm = CyGNSSDataModule(args)
@@ -268,13 +268,13 @@ def main():
     save_to_db(domain=DOMAIN, port=PORT, y_pred=y_pred, \
             rmse=rmse, date=date, rmse_time=df_rmse)
 
-main()
+#main()
 
-#DeploymentSpec(
-#    flow=main,
-#    name="model_inference",
-#    schedule=IntervalSchedule(interval=timedelta(minutes=2)),
-#    flow_runner=SubprocessFlowRunner(),
-#    tags=["cygnss"]
-#)
+DeploymentSpec(
+    flow=main,
+    name="model_inference",
+    schedule=IntervalSchedule(interval=timedelta(minutes=2)),
+    flow_runner=SubprocessFlowRunner(),
+    tags=["cygnss"]
+)
 

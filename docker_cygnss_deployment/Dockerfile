@@ -4,4 +4,3 @@ WORKDIR /app
 COPY requirements.txt .
 RUN conda install -c conda-forge cartopy
 RUN pip install -r requirements.txt
-

@@ -38,18 +38,56 @@ services:
       - "8501:8501"
       - "5000:5000"   
     command: bash -c "python cygnss-deployment/prefect-deploy.py  && streamlit run cygnss-deployment/dashboard.py && mlflow ui -p 5000"      
-    #command: bash -c "streamlit run cygnss-deployment/dashboard.py && mlflow ui -p 5000" 
+    #command: bash -c "prefect deployment create cygnss-deployment/prefect-deploy.py && streamlit run cygnss-deployment/dashboard.py && mlflow ui -p 5000" 
     depends_on:
     - mongodb
     networks:
       - backend
 
+  prefect-server:
+    image: prefecthq/prefect:2.4.5-python3.8
+    command: 
+      - prefect
+      - orion
+      - start
+    ports:
+      - "4200:4200"
+    volumes:
+      - "./../../:/app/"    
+      - ${PWD}/volumes/prefect:/root/.prefect
+    environment:
+      PREFECT_ORION_API_HOST: 0.0.0.0
+      PREFECT_LOGGING_SERVER_LEVEL: WARNING
+      PREFECT_API_URL: http://localhost:4200/api  
+    depends_on:
+      - mongodb
+    networks:
+      - backend 
+
+  prefect-agent:
+    image: prefecthq/prefect:2.4.5-python3.8
+    command:
+      - prefect
+      - agent
+      - start
+      - -q
+      - default
+    depends_on:
+      - prefect-server
+    environment:
+      PREFECT_API_URL: http://localhost:4200/api
+      PREFECT_LOGGING_LEVEL: DEBUG
+      DOCKER_HOST: unix://var/run/docker.sock
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    networks:
+      - backend
 
   # If needed, uncomment below code block 
-#  prefect:  
-#    image: prefecthq/prefect
-#    ports:
-#      - "8000:8000"      
+  #prefect:  
+  #  image: prefecthq/prefect
+  #  ports:
+  #    - "8000:8000"      
   
 
     
