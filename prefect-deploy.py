@@ -16,9 +16,12 @@ import mlflow
 from prefect import flow, task
 import streamlit as st
 # TODO Fix these imports
-from prefect.deployments import DeploymentSpec
-from prefect.flow_runners import SubprocessFlowRunner
-from prefect.orion.schemas.schedules import IntervalSchedule
+#from prefect.deployments import DeploymentSpec
+#from prefect.flow_runners import SubprocessFlowRunner
+#from prefect.orion.schemas.schedules import IntervalSchedule
+from prefect.deployments import Deployment
+from prefect.filesystems import RemoteFileSystem
+from prefect.infrastructure import DockerContainer
 from prefect.task_runners import SequentialTaskRunner
 from pymongo import MongoClient, errors
 #from API import download_raw_data
@@ -242,10 +245,10 @@ def main():
 
     # calculate rmse
     y_bins = [4, 8, 12, 16, 20, 100]
-    df_rmse = rmse_bins(y, y_pred, y_bins).result()
-    df_mockup = rmse_over_time(y_bins, df_rmse).result()
+    df_rmse = rmse_bins.submit(y, y_pred, y_bins).result()
+    df_mockup = rmse_over_time.submit(y_bins, df_rmse).result()
     with mlflow.start_run():
-        rmse = mean_squared_error(y, y_pred, squared=False)
+        rmse = mean_squared_error.submit(y, y_pred, squared=False)
         mlflow.log_metric('rmse', rmse)
    
     # make plots
@@ -268,13 +271,21 @@ def main():
     save_to_db(domain=DOMAIN, port=PORT, y_pred=y_pred, \
             rmse=rmse, date=date, rmse_time=df_rmse)
 
-#main()
+#main()        
 
-DeploymentSpec(
+
+deployment = Deployment.build_from_flow(
     flow=main,
-    name="model_inference",
-    schedule=IntervalSchedule(interval=timedelta(minutes=2)),
-    flow_runner=SubprocessFlowRunner(),
-    tags=["cygnss"]
+    name="cygnss",
+    storage=RemoteFileSystem.load('minio')
+    infrastructure=DockerContainer(
+        image = 'prefect-orion:2.4.5',
+        image_pull_policy = 'IF_NOT_PRESENT',
+        networks = ['backend'],
+    ),
+    work_queue_name="cygnss-deployment",
 )
+
+if __name__ == "__main__":
+    deployment.apply()
 

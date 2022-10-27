@@ -38,7 +38,7 @@ services:
       - "8501:8501"
       - "5000:5000"   
     command: bash -c "python cygnss-deployment/prefect-deploy.py  && streamlit run cygnss-deployment/dashboard.py && mlflow ui -p 5000"      
-    #command: bash -c "prefect deployment create cygnss-deployment/prefect-deploy.py && streamlit run cygnss-deployment/dashboard.py && mlflow ui -p 5000" 
+    #command: bash -c "streamlit run cygnss-deployment/dashboard.py && mlflow ui -p 5000" 
     depends_on:
     - mongodb
     networks:
@@ -58,6 +58,7 @@ services:
     environment:
       PREFECT_ORION_API_HOST: 0.0.0.0
       PREFECT_LOGGING_SERVER_LEVEL: WARNING
+      #PREFECT_ORION_DATABASE_CONNECTION_URL: sqlite+aiosqlite:////root/.prefect/orion.db
       PREFECT_API_URL: http://localhost:4200/api  
     depends_on:
       - mongodb
@@ -71,7 +72,7 @@ services:
       - agent
       - start
       - -q
-      - default
+      - cygnss-deployment
     depends_on:
       - prefect-server
     environment:

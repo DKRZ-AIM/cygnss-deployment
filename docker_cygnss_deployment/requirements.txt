@@ -19,4 +19,4 @@ pytorch-lightning==1.5.10
 cdsapi
 podaac-data-subscriber
 global-land-mask
-prefect==2.0b5
+prefect==2.3.2
