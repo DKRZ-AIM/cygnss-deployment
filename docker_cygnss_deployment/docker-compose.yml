@@ -44,17 +44,13 @@ services:
     networks:
       - backend
 
-  prefect-server:
+  orion:
     image: prefecthq/prefect:2.4.5-python3.8
-    command: 
-      - prefect
-      - orion
-      - start
     ports:
       - "4200:4200"
     volumes:
       - ${PWD}/volumes/prefect:/root/.prefect
-      - ${PWD}/cygnss-deployment:/flows  
+    entrypoint: ["prefect", "orion", "start"] 
     environment:
       PREFECT_ORION_API_HOST: 0.0.0.0
       PREFECT_LOGGING_SERVER_LEVEL: WARNING
@@ -67,20 +63,15 @@ services:
 
   prefect-agent:
     image: prefecthq/prefect:2.4.5-python3.8
-    command:
-      - prefect
-      - agent
-      - start
-      - -q
-      - cygnss-deployment
     depends_on:
-      - prefect-server
+      - orion
     environment:
-      PREFECT_API_URL: http://localhost:4200/api
+      PREFECT_API_URL: http://orion:4200/api
       PREFECT_LOGGING_LEVEL: DEBUG
-      DOCKER_HOST: unix://var/run/docker.sock
-    volumes:
-      - /var/run/docker.sock:/var/run/docker.sock
+      #DOCKER_HOST: unix://var/run/docker.sock
+    #volumes:
+      #- /var/run/docker.sock:/var/run/docker.sock
+    entrypoint: ["prefect", "agent", "start", "-q", "test"]
     networks:
       - backend
 

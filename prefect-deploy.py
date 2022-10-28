@@ -19,7 +19,7 @@ import streamlit as st
 #from prefect.deployments import DeploymentSpec
 #from prefect.flow_runners import SubprocessFlowRunner
 #from prefect.orion.schemas.schedules import IntervalSchedule
-from prefect.deployments import Deployment
+#from prefect.deployments import Deployment
 from prefect.filesystems import RemoteFileSystem
 from prefect.infrastructure import DockerContainer
 from prefect.task_runners import SequentialTaskRunner
@@ -221,12 +221,12 @@ def main():
 
  
     # get hyperparameters 
-    args, col_idx_lat, col_idx_lon  = get_hyper_params(model_path, model, data_path).result()
+    args, col_idx_lat, col_idx_lon  = get_hyper_params.submit(model_path, model, data_path).result()
 
     cdm = CyGNSSDataModule(args)
     cdm.setup(stage='test')
     input_shapes = cdm.get_input_shapes(stage='test')
-    backbone = get_backbone(args, input_shapes).result()
+    backbone = get_backbone.submit(args, input_shapes).result()
   
     # load model
     cygnss_model = CyGNSSNet.load_from_checkpoint(os.path.join(model_path, model),
@@ -237,7 +237,7 @@ def main():
 
     test_loader = cdm.test_dataloader()    
     # make predictions
-    y_pred = make_predictions(test_loader, cygnss_model).result()
+    y_pred = make_predictions.submit(test_loader, cygnss_model).result()
     
     # get true labels
     dataset = CyGNSSDataset('test', args)
@@ -248,7 +248,7 @@ def main():
     df_rmse = rmse_bins.submit(y, y_pred, y_bins).result()
     df_mockup = rmse_over_time.submit(y_bins, df_rmse).result()
     with mlflow.start_run():
-        rmse = mean_squared_error.submit(y, y_pred, squared=False)
+        rmse = mean_squared_error(y, y_pred, squared=False)
         mlflow.log_metric('rmse', rmse)
    
     # make plots
@@ -271,21 +271,21 @@ def main():
     save_to_db(domain=DOMAIN, port=PORT, y_pred=y_pred, \
             rmse=rmse, date=date, rmse_time=df_rmse)
 
-#main()        
+main()        
 
 
-deployment = Deployment.build_from_flow(
-    flow=main,
-    name="cygnss",
-    storage=RemoteFileSystem.load('minio')
-    infrastructure=DockerContainer(
-        image = 'prefect-orion:2.4.5',
-        image_pull_policy = 'IF_NOT_PRESENT',
-        networks = ['backend'],
-    ),
-    work_queue_name="cygnss-deployment",
-)
+#deployment = Deployment.build_from_flow(
+#    flow=main,
+#    name="cygnss",
+#    storage=RemoteFileSystem.load('minio')
+#    infrastructure=DockerContainer(
+#        image = 'prefect-orion:2.4.5',
+#        image_pull_policy = 'IF_NOT_PRESENT',
+#        networks = ['backend'],
+#    ),
+#    work_queue_name="cygnss-deployment",
+#)
 
-if __name__ == "__main__":
-    deployment.apply()
+#if __name__ == "__main__":
+#    deployment.apply()
 
