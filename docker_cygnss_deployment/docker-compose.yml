@@ -37,10 +37,13 @@ services:
     ports:
       - "8501:8501"
       - "5000:5000"   
-    command: bash -c "python cygnss-deployment/prefect-deploy.py  && streamlit run cygnss-deployment/dashboard.py && mlflow ui -p 5000"      
-    #command: bash -c "streamlit run cygnss-deployment/dashboard.py && mlflow ui -p 5000" 
+    #command: bash -c "python cygnss-deployment/prefect-deploy.py  && streamlit run cygnss-deployment/dashboard.py && mlflow ui -p 5000"      
+    command: bash -c "prefect deployment build cygnss-deployment/prefect-deploy.py:main -n cygnss -q test --apply & --cron '* * * * *' && streamlit run cygnss-deployment/dashboard.py && mlflow ui -p 5000" 
+    #entrypoint: ["streamlit", "run", "cygnss-deployment/dashboard.py"]
+    environment:
+      - PREFECT_API_URL=http://orion:4200/api
     depends_on:
-    - mongodb
+      - mongodb
     networks:
       - backend
 
@@ -49,7 +52,7 @@ services:
     ports:
       - "4200:4200"
     volumes:
-      - ${PWD}/volumes/prefect:/root/.prefect
+      - prefect:/root/.prefect
     entrypoint: ["prefect", "orion", "start"] 
     environment:
       PREFECT_ORION_API_HOST: 0.0.0.0
@@ -75,13 +78,6 @@ services:
     networks:
       - backend
 
-  # If needed, uncomment below code block 
-  #prefect:  
-  #  image: prefecthq/prefect
-  #  ports:
-  #    - "8000:8000"      
-  
-
     
 networks:
   backend:
@@ -90,3 +86,5 @@ networks:
 volumes:
   mongodbdata:
     driver: local
+  prefect:
+
