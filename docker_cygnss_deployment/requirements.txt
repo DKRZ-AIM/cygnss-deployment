@@ -20,3 +20,4 @@ cdsapi
 podaac-data-subscriber
 global-land-mask
 prefect==2.3.2
+sqlalchemy
