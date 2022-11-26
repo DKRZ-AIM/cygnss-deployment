@@ -16,10 +16,10 @@ import mlflow
 from prefect import flow, task
 import streamlit as st
 # TODO Fix these imports
-#from prefect.deployments import DeploymentSpec
+# from prefect.deployments import DeploymentSpec
 #from prefect.flow_runners import SubprocessFlowRunner
-#from prefect.orion.schemas.schedules import IntervalSchedule
-#from prefect.deployments import Deployment
+from prefect.orion.schemas.schedules import IntervalSchedule
+from prefect.deployments import Deployment
 from prefect.filesystems import RemoteFileSystem
 from prefect.infrastructure import DockerContainer
 from prefect.task_runners import SequentialTaskRunner
@@ -196,7 +196,7 @@ def rmse_over_time(y_bins, df_rmse):
     df_mockup = pd.concat([df_rmse, df_mockup], ignore_index=True)
     return df_mockup
 
-@flow(task_runner=SequentialTaskRunner())
+@flow
 def main():
 
     # Download data for the past 10th day from today, today - 10th day
@@ -271,21 +271,16 @@ def main():
     save_to_db(domain=DOMAIN, port=PORT, y_pred=y_pred, \
             rmse=rmse, date=date, rmse_time=df_rmse)
 
-main()        
+# main()        
 
 
-#deployment = Deployment.build_from_flow(
-#    flow=main,
-#    name="cygnss",
-#    storage=RemoteFileSystem.load('minio')
-#    infrastructure=DockerContainer(
-#        image = 'prefect-orion:2.4.5',
-#        image_pull_policy = 'IF_NOT_PRESENT',
-#        networks = ['backend'],
-#    ),
-#    work_queue_name="cygnss-deployment",
-#)
+if __name__ == "__main__":    
 
-#if __name__ == "__main__":
-#    deployment.apply()
+    deployment = Deployment.build_from_flow(
+    name="cygnss",  
+    schedule = IntervalSchedule(interval=timedelta(minutes=2)),
+    flow=main,        
+    work_queue_name="demo"
+)
+    deployment.apply()
 

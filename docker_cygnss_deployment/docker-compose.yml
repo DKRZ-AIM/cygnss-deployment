@@ -38,8 +38,7 @@ services:
       - "8501:8501"
       - "5000:5000"   
     #command: bash -c "python cygnss-deployment/prefect-deploy.py  && streamlit run cygnss-deployment/dashboard.py && mlflow ui -p 5000"      
-    command: bash -c "prefect deployment build cygnss-deployment/prefect-deploy.py:main -n cygnss -q test --apply & --cron '* * * * *' && streamlit run cygnss-deployment/dashboard.py && mlflow ui --backend-store-uri sqlite:///mlruns.db -p 5000" 
-    #entrypoint: ["streamlit", "run", "cygnss-deployment/dashboard.py"]
+    command: bash -c "python cygnss-deployment/prefect-deploy.py && streamlit run cygnss-deployment/dashboard.py && mlflow ui --backend-store-uri sqlite:///mlruns.db -p 5000"     
     environment:
       - PREFECT_API_URL=http://orion:4200/api
     depends_on:
@@ -48,11 +47,11 @@ services:
       - backend
 
   orion:
-    image: prefecthq/prefect:2.4.5-python3.8
+    image: prefecthq/prefect:2.6.8-python3.11
     ports:
       - "4200:4200"
     volumes:
-      - prefect:/root/.prefect
+      - prefect:/root/.prefect      
     entrypoint: ["prefect", "orion", "start"] 
     environment:
       PREFECT_ORION_API_HOST: 0.0.0.0
@@ -64,17 +63,17 @@ services:
     networks:
       - backend 
 
+  
   prefect-agent:
-    image: prefecthq/prefect:2.4.5-python3.8
-    depends_on:
-      - orion
+    image: prefecthq/prefect:2.6.8-python3.11
+    entrypoint: ["prefect", "agent", "start", "-q", "demo"]
+    volumes:
+      - "./../../:/app/"
     environment:
       PREFECT_API_URL: http://orion:4200/api
-      PREFECT_LOGGING_LEVEL: DEBUG
-      #DOCKER_HOST: unix://var/run/docker.sock
-    #volumes:
-      #- /var/run/docker.sock:/var/run/docker.sock
-    entrypoint: ["prefect", "agent", "start", "-q", "test"]
+      PREFECT_LOGGING_LEVEL: DEBUG            
+    depends_on:
+      - orion    
     networks:
       - backend
 
