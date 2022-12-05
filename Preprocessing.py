@@ -31,14 +31,11 @@ def pre_processing():
     month = date.month
     day   = date.day
 
-
     raw_data_sub = datetime.datetime.strptime(f"{year}-{month}-{day}", "%Y-%m-%d").strftime("%Y/%j")
 
     raw_data_dir = os.path.join(raw_data_root, raw_data_sub)
 
     print(raw_data_dir)
-
-
 
     start_date = datetime.datetime(year, month, day).strftime("%Y-%m-%dT%H:%M:%SZ")
     end_date   = datetime.datetime(year, month, day + 1).strftime("%Y-%m-%dT%H:%M:%SZ")
@@ -81,15 +78,12 @@ def pre_processing():
 
     for cygnss_file in os.listdir(raw_data_dir):
         if cygnss_file.startswith('cyg') and cygnss_file.endswith('.nc'):
-            print(cygnss_file)
+            print("annotating", cygnss_file)
             annotate_dataset(os.path.join(raw_data_dir, cygnss_file), era5_data, save_dataset=True)       
 
     dday = datetime.datetime.strptime(f"{year}-{month}-{day}", "%Y-%m-%d").strftime("%j") # need that later
     
-    
-    reload(prep)
-
-    args = argparse.Namespace(raw_data_dir=raw_data_dir,
+    args = argparse.Namespace(raw_data_dir=raw_data_root,
                         output_dir=dev_data_dir,
                         v_map=['brcs'],
                         n_valid_days=0,
@@ -98,7 +92,7 @@ def pre_processing():
                         only_merge=False,
                         use_land_data=False,
                         is_ml_ops=True,
-                        version='v3',
+                        version='v3.1',
                         day=dday,
                         year=year,
                         reduce_mode='')
