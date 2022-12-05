@@ -68,6 +68,8 @@ services:
     image: prefecthq/prefect:2.4.5-python3.8
     depends_on:
       - orion
+    volumes:
+      - "./../../:/app/"    
     environment:
       PREFECT_API_URL: http://orion:4200/api
       PREFECT_LOGGING_LEVEL: DEBUG
