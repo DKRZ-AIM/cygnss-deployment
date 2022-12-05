@@ -1,5 +1,21 @@
 # Usage
 
+## In Script
+
+```bash
+cd ~cygnss-deployment
+
+# download CyGNSS data
+python API.py
+
+# download ERA5 data and annotate CyGNSS data with wind speed labels
+# preprocss (filter) to create hdf5
+python Preprocessing.py
+
+# Inference
+TODO
+```
+
 ## In Jupyter notebook
 
 ### Kernel
