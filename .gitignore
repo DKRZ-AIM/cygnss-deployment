@@ -16,3 +16,6 @@ utils/mathematics.py
 utils/__pycache__/*
 plots/*
 docker_cygnss_deployment/volumes/
+raw_data/*
+dev_data/*
+prediction/*
