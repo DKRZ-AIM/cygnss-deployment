@@ -15,12 +15,12 @@ from datetime import timedelta
 def download_raw_data(year  = 2021, month = 3, day   = 17):
     # # APIs
     # Retrieve CyGNSS and ERA5 data using APIs
-    raw_data_root = './2022-cygnss-deployment/raw_data/'
-    dev_data_root = './2022-cygnss-deployment/dev_data/'
+    raw_data_root = './raw_data/'
+    dev_data_root = './dev_data/'
 
 
-    sys.path.append('./2022-cygnss-deployment/data-subscriber')
-    sys.path.append('./2020-03-gfz-remote-sensing/') 
+    sys.path.append('./externals/gfz_cygnss/')
+    sys.path.append('./externals/nasa_subscriber/')
 
 
     raw_data_sub = datetime.datetime.strptime(f"{year}-{month}-{day}", "%Y-%m-%d").strftime("%Y/%j")
@@ -36,7 +36,7 @@ def download_raw_data(year  = 2021, month = 3, day   = 17):
     print(f'--end-date   {end_date}')
     
     # Download the data
-    os.system(f"python ./2022-cygnss-deployment/data-subscriber/subscriber/podaac_data_downloader.py  -c CYGNSS_L1_V3.1 -d {raw_data_dir} --start-date {start_date} --end-date {end_date}")
+    os.system(f"python ./externals/nasa_subscriber/subscriber/podaac_data_downloader.py  -c CYGNSS_L1_V3.1 -d {raw_data_dir} --start-date {start_date} --end-date {end_date}")
    
     # if we want to use sub process in place of os.system above
     # subprocess.call(['python', './2022-cygnss-deployment/data-subscriber/subscriber/podaac_data_downloader.py', '-c ' + raw_data_dir, '--start-date ' + start_date, '--end-date ' + end_date])

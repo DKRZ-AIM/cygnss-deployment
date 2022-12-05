@@ -8,7 +8,7 @@ import sys
 import datetime
 from datetime import date
 from datetime import timedelta
-sys.path.append('./cygnss-deployment/externals/gfz_cygnss/')
+sys.path.append('./externals/gfz_cygnss/')
 import argparse 
 from gfz_202003.preprocessing import preprocess as prep
 import numpy as np
@@ -21,8 +21,8 @@ from importlib import reload
 
 def pre_processing():
 
-    raw_data_root = '/home/harsh/Downloads/DKRZ/MLOps/2022-cygnss-deployment/raw_data'
-    dev_data_dir = '/home/harsh/Downloads/DKRZ/MLOps/2022-cygnss-deployment/dev_data'     
+    raw_data_root = './raw_data'
+    dev_data_dir = './dev_data'     
         
     now = datetime.datetime.now()
     date = datetime.datetime(now.year, now.month, now.day) - timedelta(days=13)
@@ -89,7 +89,7 @@ def pre_processing():
     
     reload(prep)
 
-    args = argparse.Namespace(raw_data_dir='/work/ka1176/shared_data/2022-cygnss-deployment/raw_data/',
+    args = argparse.Namespace(raw_data_dir=raw_data_dir,
                         output_dir=dev_data_dir,
                         v_map=['brcs'],
                         n_valid_days=0,
