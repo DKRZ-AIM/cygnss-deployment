@@ -16,7 +16,7 @@ python Preprocessing.py
 PYTHONPATH="./externals/gfz_cygnss/":${PYTHONPATH}
 export PYTHONPATH
 
-python ./externals/gfz_cygnss/gfz_202003/training/cygnssnet.py --load-model-path /work/ka1176/shared_data/2022-cygnss-deployment/cygnss_trained_model/ygambdos_yykDM/trained_model/checkpoint/cygnssnet-epoch\=0.ckpt --data ./dev_data --save-y-true --prediction-output-path ./prediction/current_predictions.h5
+python ./externals/gfz_cygnss/gfz_202003/training/cygnssnet.py --load-model-path ./externals/gfz_cygnss/trained_models/ygambdos_yykDM.ckpt --data ./dev_data --save-y-true --prediction-output-path ./prediction/current_predictions.h5
 ```
 
 ## In Jupyter notebook
