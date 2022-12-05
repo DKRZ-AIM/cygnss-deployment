@@ -53,6 +53,7 @@ def pre_processing():
         'format': 'netcdf',
         'variable': [
             '10m_u_component_of_wind', '10m_v_component_of_wind',
+            'total_precipitation',
         ],
         'year': year,
         'month': month,
@@ -85,7 +86,7 @@ def pre_processing():
     
     args = argparse.Namespace(raw_data_dir=raw_data_root,
                         output_dir=dev_data_dir,
-                        v_map=['brcs'],
+                        v_map=['brcs', 'eff_scatter', 'raw_counts', 'power_analog'],
                         n_valid_days=0,
                         n_test_days=1,
                         n_processes=1,
@@ -102,6 +103,8 @@ def pre_processing():
 def annotate_dataset(cygnss_file, era5_file, save_dataset=False):
     '''
     Annotate a given CyGNSS dataset with ERA5 windspeed labels and save to disk
+
+    Annotate additional ERA5 parameters (GPM_precipitation)
     
     Parameters:
     cygnss_file : path to CyGNSS dataset
@@ -126,6 +129,7 @@ def annotate_dataset(cygnss_file, era5_file, save_dataset=False):
     
     cygnss_ds['ERA5_u10'] = interp_ds['u10']
     cygnss_ds['ERA5_v10'] = interp_ds['v10']
+    cygnss_ds['GPM_precipitation'] = interp_ds['tp']
 
     tmp_attrs = cygnss_ds['ERA5_u10'].attrs
     tmp_attrs['long_name'] = cygnss_ds['ERA5_u10'].long_name + ' (interpolated)'
@@ -138,7 +142,6 @@ def annotate_dataset(cygnss_file, era5_file, save_dataset=False):
     cygnss_ds = cygnss_ds.drop_vars(['longitude', 'latitude', 'time'])
     
     # dummy values only for preprocessing routine
-    cygnss_ds['GPM_precipitation'] = -9999
     cygnss_ds['ERA5_mdts'] = -9999
     cygnss_ds['ERA5_mdww'] = -9999
     cygnss_ds['ERA5_swh'] = -9999
