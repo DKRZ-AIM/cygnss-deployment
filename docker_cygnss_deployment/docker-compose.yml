@@ -1,0 +1,92 @@
+# Use root/example as user/password credentials
+version: '3.1'
+services:
+  mongodb:    
+    image: mongo  
+    container_name: mongodb
+    restart: unless-stopped
+    volumes:
+      - mongodbdata:/data/db    
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: root
+      MONGO_INITDB_ROOT_PASSWORD: example
+    networks:
+      - backend
+
+  mongo-express:
+    image: mongo-express  
+    container_name: mongo-express
+    restart: unless-stopped
+    ports:
+      - 8081:8081
+    volumes:
+      - mongodbdata:/data/db    
+    environment:
+      ME_CONFIG_MONGODB_ADMINUSERNAME: root
+      ME_CONFIG_MONGODB_ADMINPASSWORD: example
+      ME_CONFIG_MONGODB_URL: mongodb://root:example@mongodb:27017/
+    networks:
+      - backend
+
+ 
+  streamlit:    
+    build: .
+    container_name: streamlit    
+    volumes:
+      - "./../../:/app/"    
+    ports:
+      - "8501:8501"
+      - "5000:5000"   
+    #command: bash -c "python cygnss-deployment/prefect-deploy.py  && streamlit run cygnss-deployment/dashboard.py && mlflow ui -p 5000"      
+    command: bash -c "prefect deployment build cygnss-deployment/prefect-deploy.py:main -n cygnss -q test --apply & --cron '* * * * *' && streamlit run cygnss-deployment/dashboard.py && mlflow ui --backend-store-uri sqlite:///mlruns.db -p 5000" 
+    #entrypoint: ["streamlit", "run", "cygnss-deployment/dashboard.py"]
+    environment:
+      - PREFECT_API_URL=http://orion:4200/api
+    depends_on:
+      - mongodb
+    networks:
+      - backend
+
+  orion:
+    image: prefecthq/prefect:2.4.5-python3.8
+    ports:
+      - "4200:4200"
+    volumes:
+      - prefect:/root/.prefect
+    entrypoint: ["prefect", "orion", "start"] 
+    environment:
+      PREFECT_ORION_API_HOST: 0.0.0.0
+      PREFECT_LOGGING_SERVER_LEVEL: WARNING
+      #PREFECT_ORION_DATABASE_CONNECTION_URL: sqlite+aiosqlite:////root/.prefect/orion.db
+      PREFECT_API_URL: http://localhost:4200/api  
+    depends_on:
+      - mongodb
+    networks:
+      - backend 
+
+  prefect-agent:
+    image: prefecthq/prefect:2.4.5-python3.8
+    depends_on:
+      - orion
+    volumes:
+      - "./../../:/app/"    
+    environment:
+      PREFECT_API_URL: http://orion:4200/api
+      PREFECT_LOGGING_LEVEL: DEBUG
+      #DOCKER_HOST: unix://var/run/docker.sock
+    #volumes:
+      #- /var/run/docker.sock:/var/run/docker.sock
+    entrypoint: ["prefect", "agent", "start", "-q", "test"]
+    networks:
+      - backend
+
+    
+networks:
+  backend:
+    driver: bridge
+
+volumes:
+  mongodbdata:
+    driver: local
+  prefect:
+

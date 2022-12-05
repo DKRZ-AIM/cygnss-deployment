@@ -1,4 +1,5 @@
 import numpy as np
+import itertools
 
 import utils.constants as const
 
@@ -315,5 +316,42 @@ def inverse_scale_zero_mean_unit_variance(y, mu, sigma):
     return y * sigma + mu
 
 
+def average_to_grid2(lon, lat, var, resolution=1, fill_value=-1):
+    '''
+    Grid a time-dependent variable in lon/lat and average over all counts
+    
+    lon - time series of lon coordinate (1D) (0...360)
+    lat - time series of lat coordinate (1D)
+    var - time series of variable (1D)
+    resolution - target grid resolution (default: 1 deg)
+    fill_value - a value that can be used for filling (i.e. that does not show up in var)
+    
+    Returns:
+    2D gridded arrays for lat, lon, count-averaged var
+    '''
+
+    assert len(lon) == len(lat)
+    assert len(lon) == len(var)
+
+    grid_lon = np.arange(0, 360+resolution, resolution)
+    grid_lat = np.arange(-90, 90+resolution, resolution)[::-1] # top left is +lat
+
+    ix_lon = np.digitize(lon, grid_lon)
+    ix_lat = np.digitize(lat, grid_lat)
+
+    xx, yy = np.meshgrid(grid_lon, grid_lat, indexing='ij')
+    gridded_var = np.empty(xx.shape, dtype='float')
+    gridded_var[:] = fill_value
+
+    ij = itertools.product(np.unique(ix_lon), np.unique(ix_lat))
+
+    for i,j in ij:
+        cond = (ix_lon==i) & (ix_lat==j)
+        gridded_var[i,j] = np.mean(var[cond])
+
+    gridded_var[gridded_var==fill_value] = None
+
+
+    return xx, yy, gridded_var
 
 

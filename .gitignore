@@ -13,3 +13,6 @@ lightning_logs/
 mlruns/*
 mlruns.db
 utils/mathematics.py
+utils/__pycache__/*
+plots/*
+docker_cygnss_deployment/volumes/
