@@ -30,8 +30,7 @@ services:
 
  
   streamlit:    
-    build: .
-    container_name: streamlit    
+    build: .    
     volumes:
       - "./../../:/app/"    
     ports:
@@ -65,7 +64,8 @@ services:
 
   
   prefect-agent:
-    image: prefecthq/prefect:2.6.8-python3.11
+    build: .
+    # image: prefecthq/prefect:2.6.8-python3.11
     entrypoint: ["prefect", "agent", "start", "-q", "demo"]
     volumes:
       - "./../../:/app/"

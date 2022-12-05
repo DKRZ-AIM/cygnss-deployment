@@ -24,7 +24,7 @@ from prefect.filesystems import RemoteFileSystem
 from prefect.infrastructure import DockerContainer
 from prefect.task_runners import SequentialTaskRunner
 from pymongo import MongoClient, errors
-#from API import download_raw_data
+from API import download_raw_data
 from datetime import datetime, timedelta
 sys.path.append('./2020-03-gfz-remote-sensing')
 sys.path.append('./2020-03-gfz-remote-sensing/gfz_202003')
@@ -38,33 +38,6 @@ def download_data():
     download_data_date = datetime.date.today() - datetime.timedelta(days=10)
     download_raw_data(year = download_data_date.year, month = download_data_date.month, day = download_data_date.day)
     
-#@task
-#def write_data(client):
-#        data_1 = {
-#        "rmse": 3.1, 
-#        "event_date":  datetime.datetime(2022, 8, 10),
-#        "image_url": "https://www.dkrz.de/en/about-en/aufgaben/dkrz-and-climate-research/@@images/image/large"
-#        }
-
-#        data_2 = {
-#        "rmse": 2.1,         
-#        "event_date":  datetime.datetime(2022, 8, 9),
-#        "image_url": "https://www.dkrz.de/en/about-en/aufgaben/dkrz-and-climate-research/@@images/image/large"
-#        }
-
-#        data_3 = {
-#        "rmse": 3.2,         
-#        "event_date":  datetime.datetime(2022, 8, 8),
-#        "image_url": "https://www.dkrz.de/en/about-en/aufgaben/dkrz-and-climate-research/@@images/image/large"
-#        }
-
-
-#        cygnss_collection = client["cygnss"].cygnss_collection
-
-#        cygnss_collection = cygnss_collection.insert_many([data_1, data_2, data_3])
-
-#        print(f"Multiple tutorials: {cygnss_collection.inserted_ids}")
-
 @task
 def get_data(client):        
         cygnss = client.cygnss                        
@@ -237,7 +210,7 @@ def main():
 
     test_loader = cdm.test_dataloader()    
     # make predictions
-    y_pred = make_predictions.submit(test_loader, cygnss_model).result()
+    y_pred = make_predictions(test_loader, cygnss_model)
     
     # get true labels
     dataset = CyGNSSDataset('test', args)
@@ -256,8 +229,8 @@ def main():
     sp_lon = test_loader.dataset.v_par_eval[:, col_idx_lon]
     plots.make_scatterplot(y, y_pred)
     plots.make_histogram(y, y_pred)
-    plots.era_average(y, sp_lon, sp_lat)
-    plots.rmse_average(y, y_pred, sp_lon, sp_lat)
+    # plots.era_average(y, sp_lon, sp_lat)
+    # plots.rmse_average(y, y_pred, sp_lon, sp_lat)
     plots.today_longrunavg(df_mockup, y_bins)
     plots.today_longrunavg_bias(df_mockup, y_bins)
     plots.sample_counts(df_rmse, y_bins)
@@ -271,16 +244,14 @@ def main():
     save_to_db(domain=DOMAIN, port=PORT, y_pred=y_pred, \
             rmse=rmse, date=date, rmse_time=df_rmse)
 
-# main()        
-
 
 if __name__ == "__main__":    
 
     deployment = Deployment.build_from_flow(
-    name="cygnss",  
-    schedule = IntervalSchedule(interval=timedelta(minutes=2)),
-    flow=main,        
-    work_queue_name="demo"
+        schedule = IntervalSchedule(interval=timedelta(minutes=2)),
+        flow=main,  
+        name="cygnss",  
+        work_queue_name="demo"
 )
     deployment.apply()
 
