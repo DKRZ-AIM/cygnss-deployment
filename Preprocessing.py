@@ -20,8 +20,21 @@ import cdsapi
 from importlib import reload
 
 def pre_processing():
+    '''
+    Preprocessing routines for CyGNSSnet
+
+    (1) Annotate CyGNSS raw data with windspeed labels from ERA5
+    (2) Filter and generate hdf5 file
+
+    Folder structure:
+
+    * raw_data
+    * annotated_raw_data
+    * dev_data : filtered, one file test_data.h5
+    '''
 
     raw_data_root = './raw_data'
+    annotated_raw_data_root = './annotated_raw_data'
     dev_data_dir = './dev_data'     
         
     now = datetime.datetime.now()
@@ -33,48 +46,14 @@ def pre_processing():
     raw_data_sub = datetime.datetime.strptime(f"{year}-{month}-{day}", "%Y-%m-%d").strftime("%Y/%j")
 
     raw_data_dir = os.path.join(raw_data_root, raw_data_sub)
+    annotated_raw_data_dir = os.path.join(annotated_raw_data_root, raw_data_sub)
+    era5_data = os.path.join(raw_data_dir, 'ERA5_windspeed.nc') 
 
-    print(raw_data_dir)
+    if not os.path.isdir(annotated_raw_data_dir):
+        os.makedirs(annotated_raw_data_dir, exist_ok=True)
 
     start_date = datetime.datetime(year, month, day).strftime("%Y-%m-%dT%H:%M:%SZ")
     end_date   = datetime.datetime(year, month, day + 1).strftime("%Y-%m-%dT%H:%M:%SZ")
-
-    print(f'--start-date {start_date}')
-    print(f'--end-date   {end_date}')
-
-    era5_data = os.path.join(raw_data_dir, 'ERA5_windspeed.nc') 
-    cds = cdsapi.Client() 
-   
-    cds.retrieve(
-    'reanalysis-era5-single-levels',
-    {
-        'product_type': 'reanalysis',
-        'format': 'netcdf',
-        'variable': [
-            '10m_u_component_of_wind', '10m_v_component_of_wind',
-            'total_precipitation',
-        ],
-        'year': year,
-        'month': month,
-        'day': day,
-        'time': [
-            '00:00', '01:00', '02:00',
-            '03:00', '04:00', '05:00',
-            '06:00', '07:00', '08:00',
-            '09:00', '10:00', '11:00',
-            '12:00', '13:00', '14:00',
-            '15:00', '16:00', '17:00',
-            '18:00', '19:00', '20:00',
-            '21:00', '22:00', '23:00'
-        ],
-        'area': [
-            40, -180, -40, 180,
-        ],
-    },
-    era5_data)
-
-    era5_ds = xr.open_dataset(era5_data)
-
 
     for cygnss_file in os.listdir(raw_data_dir):
         if cygnss_file.startswith('cyg') and cygnss_file.endswith('.nc'):
@@ -104,11 +83,13 @@ def annotate_dataset(cygnss_file, era5_file, save_dataset=False):
     Annotate a given CyGNSS dataset with ERA5 windspeed labels and save to disk
 
     Annotate additional ERA5 parameters (GPM_precipitation)
+
+    TODO: hash
     
     Parameters:
     cygnss_file : path to CyGNSS dataset
     era5_file   : path to orresponding ERA5 dataset
-    save_dataset : if True, save dataset to disk overwriting cygnss_file (default: False)
+    save_dataset : if True, save dataset to disk in annotated_raw_data_dir (default: False)
     
     Returns:
     Annotated CyGNSS dataset
@@ -151,8 +132,9 @@ def annotate_dataset(cygnss_file, era5_file, save_dataset=False):
     cygnss_ds['ERA5_p140127'] = -9999
     
     if save_dataset:
-        cygnss_ds.to_netcdf(cygnss_file)
+        cygnss_ds.to_netcdf(cygnss_file.replace('raw_data', 'annotated_raw_data'))
         
     return cygnss_ds
 
-
+if __name__=='__main__':
+    pre_processing()
