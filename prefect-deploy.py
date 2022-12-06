@@ -25,16 +25,17 @@ from prefect.infrastructure import DockerContainer
 from prefect.task_runners import SequentialTaskRunner
 from pymongo import MongoClient, errors
 from API import download_raw_data
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, date
 sys.path.append('externals/gfz_cygnss/gfz_202003')
 sys.path.append('externals/gfz_cygnss/gfz_202003/training')
 
 from cygnssnet import ImageNet, DenseNet, CyGNSSNet, CyGNSSDataModule, CyGNSSDataset
 import plots
+from Preprocessing import pre_processing
 
 @task
 def download_data():
-    download_data_date = datetime.date.today() - datetime.timedelta(days=10)
+    download_data_date = date.today() - timedelta(days=10)
     download_raw_data(year = download_data_date.year, month = download_data_date.month, day = download_data_date.day)
     
 @task
@@ -174,7 +175,7 @@ def main():
     #download_data()
     
     # TODO
-    # pre_process()
+    #pre_processing()
 
     # TODO: get date from preprocessing
     now = datetime.now()
@@ -184,7 +185,7 @@ def main():
     model_path = './2022-cygnss-deployment/'\
             'cygnss_trained_model/ygambdos_yykDM/checkpoint'
     model = 'cygnssnet-epoch=0.ckpt'
-    data_path = './2022-cygnss-deployment/small_data/' #'../data' # TODO, change the path outside of code, in a separete folder
+    data_path = './2022-cygnss-deployment/small_data/' #'./dev_data' TODO, change the path outside of code, in a separete folder
     h5_file = h5py.File(os.path.join(data_path, 'test_data.h5'), 'r', rdcc_nbytes=0)
 
     mlflow.set_tracking_uri("sqlite:///mlruns.db") # TODO: change this to other db
@@ -227,8 +228,8 @@ def main():
     sp_lon = test_loader.dataset.v_par_eval[:, col_idx_lon]
     plots.make_scatterplot(y, y_pred)
     plots.make_histogram(y, y_pred)
-    # plots.era_average(y, sp_lon, sp_lat)
-    # plots.rmse_average(y, y_pred, sp_lon, sp_lat)
+    plots.era_average(y, sp_lon, sp_lat)
+    plots.rmse_average(y, y_pred, sp_lon, sp_lat)
     plots.today_longrunavg(df_mockup, y_bins)
     plots.today_longrunavg_bias(df_mockup, y_bins)
     plots.sample_counts(df_rmse, y_bins)
@@ -245,10 +246,11 @@ def main():
 
 if __name__ == "__main__":    
 
-    deployment = Deployment.build_from_flow(
-        schedule = IntervalSchedule(interval=timedelta(minutes=2)),
-        flow=main,  
-        name="cygnss",  
-        work_queue_name="demo"
-)
-    deployment.apply()
+    #deployment = Deployment.build_from_flow(
+    #    schedule = IntervalSchedule(interval=timedelta(minutes=2)),
+    #    flow=main,  
+    #    name="cygnss",  
+    #    work_queue_name="demo"
+    #)
+    #deployment.apply()
+    main()

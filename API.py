@@ -21,6 +21,7 @@ def download_raw_data(year  = 2021, month = 3, day   = 17):
 
     sys.path.append('./externals/gfz_cygnss/')
     sys.path.append('./externals/nasa_subscriber/')
+    sys.path.append('./externals/nasa_subscriber/subscriber')
 
 
     raw_data_sub = datetime.datetime.strptime(f"{year}-{month}-{day}", "%Y-%m-%d").strftime("%Y/%j")
@@ -42,5 +43,5 @@ def download_raw_data(year  = 2021, month = 3, day   = 17):
     # subprocess.call(['python', './2022-cygnss-deployment/data-subscriber/subscriber/podaac_data_downloader.py', '-c ' + raw_data_dir, '--start-date ' + start_date, '--end-date ' + end_date])
 
     
-# download_data_date = date.today() - timedelta(days=13)
-# download_raw_data(year = download_data_date.year, month = download_data_date.month, day = download_data_date.day)
+download_data_date = date.today() - timedelta(days=10)
+download_raw_data(year = download_data_date.year, month = download_data_date.month, day = download_data_date.day)

@@ -25,8 +25,7 @@ def pre_processing():
     dev_data_dir = './dev_data'     
         
     now = datetime.datetime.now()
-    date = datetime.datetime(now.year, now.month, now.day) - timedelta(days=13)
-    # date = datetime.datetime(2022, 9, 10)
+    date = datetime.datetime(now.year, now.month, now.day) - timedelta(days=10)
     year  = date.year
     month = date.month
     day   = date.day
@@ -157,4 +156,3 @@ def annotate_dataset(cygnss_file, era5_file, save_dataset=False):
     return cygnss_ds
 
 
-# pre_processing()
