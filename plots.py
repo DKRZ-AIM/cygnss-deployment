@@ -9,6 +9,7 @@ import cartopy.crs as ccrs
 from cartopy.mpl.ticker import LongitudeFormatter, LatitudeFormatter
 from mpl_toolkits.axes_grid1 import AxesGrid
 import itertools
+plt.switch_backend('agg')
 
 deg = 1 # grid resolution (publication: 1)
 
