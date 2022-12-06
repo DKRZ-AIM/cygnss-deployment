@@ -26,9 +26,8 @@ from prefect.task_runners import SequentialTaskRunner
 from pymongo import MongoClient, errors
 from API import download_raw_data
 from datetime import datetime, timedelta
-sys.path.append('./2020-03-gfz-remote-sensing')
-sys.path.append('./2020-03-gfz-remote-sensing/gfz_202003')
-sys.path.append('./2020-03-gfz-remote-sensing/gfz_202003/training')
+sys.path.append('externals/gfz_cygnss/gfz_202003')
+sys.path.append('externals/gfz_cygnss/gfz_202003/training')
 
 from cygnssnet import ImageNet, DenseNet, CyGNSSNet, CyGNSSDataModule, CyGNSSDataset
 import plots
@@ -171,7 +170,6 @@ def rmse_over_time(y_bins, df_rmse):
 
 @flow
 def main():
-
     # Download data for the past 10th day from today, today - 10th day
     #download_data()
     
@@ -254,4 +252,3 @@ if __name__ == "__main__":
         work_queue_name="demo"
 )
     deployment.apply()
-

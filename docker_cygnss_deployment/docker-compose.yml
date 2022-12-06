@@ -32,12 +32,12 @@ services:
   streamlit:    
     build: .    
     volumes:
-      - "./../../:/app/"    
+      - "./../:/app/"    
     ports:
       - "8501:8501"
       - "5000:5000"   
     #command: bash -c "python cygnss-deployment/prefect-deploy.py  && streamlit run cygnss-deployment/dashboard.py && mlflow ui -p 5000"      
-    command: bash -c "python cygnss-deployment/prefect-deploy.py && streamlit run cygnss-deployment/dashboard.py && mlflow ui --backend-store-uri sqlite:///mlruns.db -p 5000"     
+    command: bash -c "python prefect-deploy.py && streamlit run dashboard.py && mlflow ui --backend-store-uri sqlite:///mlruns.db -p 5000"     
     environment:
       - PREFECT_API_URL=http://orion:4200/api
     depends_on:
@@ -65,10 +65,9 @@ services:
   
   prefect-agent:
     build: .
-    # image: prefecthq/prefect:2.6.8-python3.11
     entrypoint: ["prefect", "agent", "start", "-q", "demo"]
     volumes:
-      - "./../../:/app/"
+      - "./../:/app/"
     environment:
       PREFECT_API_URL: http://orion:4200/api
       PREFECT_LOGGING_LEVEL: DEBUG            

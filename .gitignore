@@ -19,3 +19,4 @@ docker_cygnss_deployment/volumes/
 raw_data/*
 dev_data/*
 prediction/*
+2022-cygnss-deployment/*
