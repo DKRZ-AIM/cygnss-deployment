@@ -34,10 +34,9 @@ import plots
 from Preprocessing import pre_processing
 
 @task
-def download_data():
+def download_data(year, month, day):
     # Using API calls
-    download_data_date = date.today() - timedelta(days=10)
-    download_raw_data(year = download_data_date.year, month = download_data_date.month, day = download_data_date.day)
+    download_raw_data(year, month, day)
     
 @task
 def get_data(client):        
@@ -172,18 +171,17 @@ def rmse_over_time(y_bins, df_rmse):
 
 @flow
 def main():
+
+    # Define the date and pass it to the individual tasks
+    download_date = date.today() - timedelta(days=10)
+
     # Download data for the past 10th day from today, today - 10th day
-    download_data()
+    download_data(year=download_date.year, month=download_date.month, day=download_date.day)
 
     # annotate data
-    # create test_data.h5 from preprocessing
-    pre_processing()
+    # create filtered hdf5 from preprocessing
+    pre_processing(download_date.year, download_date.month, download_date.day, './dev_data/')
 
-    # TODO: get date from preprocessing
-    #now = datetime.now()
-    #date = datetime(now.year, now.month, now.day) - timedelta(days=10)
-    ##date = datetime.datetime(2022, 9, 10)
-    
     model_path = './externals/gfz_cygnss/trained_models/'
     model = 'ygambdos_yykDM.ckpt'
     data_path = './dev_data/' #'../data' # TODO, change the path outside of code, in a separete folder
