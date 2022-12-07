@@ -32,7 +32,8 @@ services:
   streamlit:    
     build: .    
     volumes:
-      - "./../:/app/"    
+      - "./../:/app/"   
+      - "~/:/auth" 
     ports:
       - "8501:8501"
       - "5000:5000"   
@@ -68,6 +69,7 @@ services:
     entrypoint: ["prefect", "agent", "start", "-q", "demo"]
     volumes:
       - "./../:/app/"
+      - "~/:/auth"  
     environment:
       PREFECT_API_URL: http://orion:4200/api
       PREFECT_LOGGING_LEVEL: DEBUG            
