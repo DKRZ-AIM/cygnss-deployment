@@ -32,8 +32,12 @@ services:
   streamlit:    
     build: .    
     volumes:
-      - "./../:/app/"   
-      - "~/:/auth" 
+      - "./../:/app/"
+      - type: bind
+        source: ${HOME}${USERPROFILE}/.netrc
+        target: /root/.netrc
+#      - "${HOME}/.netrc:/.netrc"
+      - "${HOME}/.cdsapirc:/.cdsapirc" 
     ports:
       - "8501:8501"
       - "5000:5000"   
@@ -69,7 +73,11 @@ services:
     entrypoint: ["prefect", "agent", "start", "-q", "demo"]
     volumes:
       - "./../:/app/"
-      - "~/:/auth"  
+      - type: bind
+        source: ${HOME}${USERPROFILE}/.netrc
+        target: /root/.netrc
+#      - "${HOME}/.netrc:/.netrc"
+      - "${HOME}/.cdsapirc:/.cdsapirc" 
     environment:
       PREFECT_API_URL: http://orion:4200/api
       PREFECT_LOGGING_LEVEL: DEBUG            

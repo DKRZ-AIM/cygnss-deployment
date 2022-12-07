@@ -8,8 +8,10 @@ import sys
 from datetime import datetime, date, timedelta
 import argparse 
 
-sys.path.append('./externals/gfz_cygnss/')
+sys.path.append('externals/gfz_cygnss/')
 from gfz_202003.preprocessing import preprocess as prep
+#sys.path.append('externals/gfz_cygnss/gfz_202003')
+#from preprocessing import preprocess as prep
 
 import numpy as np
 import xarray as xr
