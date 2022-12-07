@@ -26,10 +26,11 @@ from prefect.task_runners import SequentialTaskRunner
 from pymongo import MongoClient, errors
 from API import download_raw_data
 from datetime import datetime, timedelta, date
-sys.path.append('externals/gfz_cygnss/gfz_202003')
-sys.path.append('externals/gfz_cygnss/gfz_202003/training')
+sys.path.append('./externals/gfz_cygnss/')
+sys.path.append('./externals/gfz_cygnss/gfz_202003')
+sys.path.append('./externals/gfz_cygnss/gfz_202003/training')
 
-from cygnssnet import ImageNet, DenseNet, CyGNSSNet, CyGNSSDataModule, CyGNSSDataset
+from cygnssnet import ImageNet, DenseNet, CyGNSSNet, CyGNSSDataset, CyGNSSDataModule
 import plots
 from Preprocessing import pre_processing
 
