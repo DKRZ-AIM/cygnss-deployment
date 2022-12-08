@@ -51,14 +51,21 @@ def era5_downloader(year, month, day, raw_data_dir):
     '''
     ERA5 data downloader from Copernicus
 
+    We need to download all the time steps of the current day, as well as the 
+    time step midnight on the following day. These are merged.
+
     Parameters:
       year, month, day - download data from the full day specified
       data_path  - path to store the data
     '''
 
-    era5_data = os.path.join(raw_data_dir, 'ERA5_windspeed.nc') 
+    print("Start ERA5 download")
+    target_data = os.path.join(raw_data_dir, 'ERA5_windspeed.nc')
+    era5_data = os.path.join(raw_data_dir, 'ERA5_today.nc') 
+    tomorrow_era5_data = os.path.join(raw_data_dir, 'ERA5_tomorrow.nc') 
     cds = cdsapi.Client() 
    
+    # Retrieve today's data
     cds.retrieve(
     'reanalysis-era5-single-levels',
     {
@@ -82,12 +89,41 @@ def era5_downloader(year, month, day, raw_data_dir):
             '21:00', '22:00', '23:00'
         ],
         'area': [
-            40, -180, -40, 180,
+            50, -180, -50, 180,
         ],
     },
     era5_data)
 
-    logging.info('SUCCESS: Retrieved ERA5 data')
+    # Retrieve tomorrow's data
+    tomorrow = datetime(year, month, day) + timedelta(1)
+
+    cds.retrieve(
+    'reanalysis-era5-single-levels',
+    {
+        'product_type': 'reanalysis',
+        'format': 'netcdf',
+        'variable': [
+            '10m_u_component_of_wind', '10m_v_component_of_wind',
+            'total_precipitation',
+        ],
+        'year': tomorrow.year,
+        'month': tomorrow.month,
+        'day': tomorrow.day,
+        'time': [
+            '00:00', '01:00'
+        ],
+        'area': [
+            50, -180, -50, 180,
+        ],
+    },
+    tomorrow_era5_data)
+
+    # Retrieve tomorrow's data
+    with xr.open_dataset(era5_data) as f1, xr.open_dataset(tomorrow_era5_data) as f2:
+        era5_ds = xr.merge([f1.load(), f2.load()])
+        era5_ds.to_netcdf(target_data)
+
+    print('SUCCESS: Retrieved ERA5 data')
     
 
 def adapted_podaac_downloader(start_date, end_date, data_path):
@@ -127,7 +163,7 @@ def adapted_podaac_downloader(start_date, end_date, data_path):
 
 
     if not os.path.isdir(data_path):
-        logging.info("NOTE: Making new data directory at " + data_path + "(This is the first run.)")
+        print("NOTE: Making new data directory at " + data_path + "(This is the first run.)")
         os.makedirs(data_path, exist_ok=True)
 
     temporal_range = pa.get_temporal_range(start_date, end_date,
@@ -139,7 +175,7 @@ def adapted_podaac_downloader(start_date, end_date, data_path):
         ('ShortName', short_name),
         ('temporal', temporal_range),
     ]
-    logging.info("Temporal Range: " + temporal_range)
+    print("Temporal Range: " + temporal_range)
 
     # TODO bbox
 
@@ -158,7 +194,7 @@ def adapted_podaac_downloader(start_date, end_date, data_path):
             raise e
 
     if verbose:
-        logging.info(str(results['hits']) + " granules found for " + short_name)  # noqa E501
+        print(str(results['hits']) + " granules found for " + short_name)  # noqa E501
 
     downloads_all = []
     downloads_data = [[u['URL'] for u in r['umm']['RelatedUrls'] if
@@ -190,9 +226,9 @@ def adapted_podaac_downloader(start_date, end_date, data_path):
 
     downloads = filtered_downloads
 
-    logging.info("Found " + str(len(downloads)) + " total files to download")
+    print("Found " + str(len(downloads)) + " total files to download")
     if verbose:
-        logging.info("Downloading files with extensions: " + str(extensions))
+        print("Downloading files with extensions: " + str(extensions))
 
     # NEED TO REFACTOR THIS, A LOT OF STUFF in here
     # Finish by downloading the files to the data directory in a loop.
@@ -204,13 +240,13 @@ def adapted_podaac_downloader(start_date, end_date, data_path):
 
             # decide if we should actually download this file (e.g. we may already have the latest version)
             if(os.path.exists(output_path) and not force and pa.checksum_does_match(output_path, checksums)):
-                logging.info(str(datetime.now()) + " SKIPPED: " + f)
+                print(str(datetime.now()) + " SKIPPED: " + f)
                 skip_cnt += 1
                 continue
 
             urlretrieve(f, output_path)
             #pa.process_file(process_cmd, output_path, args)
-            logging.info(str(datetime.now()) + " SUCCESS: " + f)
+            print(str(datetime.now()) + " SUCCESS: " + f)
             success_cnt = success_cnt + 1
 
             #if limit is set and we're at or over it, stop downloading
@@ -221,11 +257,11 @@ def adapted_podaac_downloader(start_date, end_date, data_path):
             logging.warning(str(datetime.now()) + " FAILURE: " + f, exc_info=True)
             failure_cnt = failure_cnt + 1
 
-    logging.info("Downloaded Files: " + str(success_cnt))
-    logging.info("Failed Files:     " + str(failure_cnt))
-    logging.info("Skipped Files:    " + str(skip_cnt))
+    print("Downloaded Files: " + str(success_cnt))
+    print("Failed Files:     " + str(failure_cnt))
+    print("Skipped Files:    " + str(skip_cnt))
     pa.delete_token(token_url, token)
-    logging.info("END\n\n")
+    print("END\n\n")
 
 if __name__=='__main__':    
     download_data_date = date.today() - timedelta(days=10)

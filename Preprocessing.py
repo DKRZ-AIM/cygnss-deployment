@@ -61,7 +61,7 @@ def pre_processing(year, month, day, dev_data_dir='./dev_data'):
             print("annotating", cygnss_file)
 
             pcf = os.path.join(raw_data_dir, cygnss_file)
-            phf = os.path.join(raw_data_dir, cygnss_file.replace('.nc', '.md5'))
+            phf = os.path.join(annotated_raw_data_dir, cygnss_file.replace('.nc', '.md5'))
 
             print("create hash", phf)
 
@@ -115,6 +115,8 @@ def annotate_dataset(cygnss_file, era5_file, save_dataset=False):
     '''
     Annotate a given CyGNSS dataset with ERA5 windspeed labels and save to disk
 
+    The ERA5 grid is padded to mimic periodic boundary conditions.
+
     Annotate additional ERA5 parameters (GPM_precipitation)
 
     TODO: hash
@@ -137,8 +139,18 @@ def annotate_dataset(cygnss_file, era5_file, save_dataset=False):
         
     # needs to be shifted by 180 for compatibility with CyGNSS
     era5_ds = era5_ds.assign_coords(longitude=era5_ds.coords['longitude'] + 180)
-    
-    interp_ds = era5_ds.interp(longitude=cygnss_ds.sp_lon, latitude=cygnss_ds.sp_lat, time=cygnss_ds.ddm_timestamp_utc)
+
+    # pad to the right (> 360 deg lon)
+    era5_r = era5_ds.where(era5_ds.longitude < 10, drop=True)
+    # pad to the left (< 0 deg lon)
+    era5_l = era5_ds.where(era5_ds.longitude > 350, drop=True)
+    # shift coordinate outside bounding box
+    era5_r = era5_r.assign_coords(longitude=era5_r.coords['longitude'] + 360)
+    era5_l = era5_l.assign_coords(longitude=era5_l.coords['longitude'] - 360)
+
+    padded_ds = xr.merge([era5_l, era5_ds, era5_r])
+
+    interp_ds = padded_ds.interp(longitude=cygnss_ds.sp_lon, latitude=cygnss_ds.sp_lat, time=cygnss_ds.ddm_timestamp_utc)
     
     cygnss_ds['ERA5_u10'] = interp_ds['u10']
     cygnss_ds['ERA5_v10'] = interp_ds['v10']

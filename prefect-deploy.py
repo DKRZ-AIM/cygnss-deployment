@@ -111,6 +111,7 @@ def get_hyper_params(model_path, model, data_path):
     checkpoint = torch.load(os.path.join(model_path, model),
                     map_location=torch.device("cpu"))
     checkpoint['hyper_parameters']["data"] = data_path
+    checkpoint['hyper_parameters']["num_workers"] = 1
     col_idx_lat = checkpoint["hyper_parameters"]["v_par_eval"].index('sp_lat')
     col_idx_lon = checkpoint["hyper_parameters"]["v_par_eval"].index('sp_lon')
     args = namedtuple("ObjectName", checkpoint['hyper_parameters'].keys())\
