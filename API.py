@@ -51,15 +51,21 @@ def era5_downloader(year, month, day, raw_data_dir):
     '''
     ERA5 data downloader from Copernicus
 
+    We need to download all the time steps of the current day, as well as the 
+    time step midnight on the following day. These are merged.
+
     Parameters:
       year, month, day - download data from the full day specified
       data_path  - path to store the data
     '''
 
     print("Start ERA5 download")
-    era5_data = os.path.join(raw_data_dir, 'ERA5_windspeed.nc') 
+    target_data = os.path.join(raw_data_dir, 'ERA5_windspeed.nc')
+    era5_data = os.path.join(raw_data_dir, 'ERA5_today.nc') 
+    tomorrow_era5_data = os.path.join(raw_data_dir, 'ERA5_tomorrow.nc') 
     cds = cdsapi.Client() 
    
+    # Retrieve today's data
     cds.retrieve(
     'reanalysis-era5-single-levels',
     {
@@ -87,6 +93,35 @@ def era5_downloader(year, month, day, raw_data_dir):
         ],
     },
     era5_data)
+
+    # Retrieve tomorrow's data
+    tomorrow = datetime(year, month, day) + timedelta(1)
+
+    cds.retrieve(
+    'reanalysis-era5-single-levels',
+    {
+        'product_type': 'reanalysis',
+        'format': 'netcdf',
+        'variable': [
+            '10m_u_component_of_wind', '10m_v_component_of_wind',
+            'total_precipitation',
+        ],
+        'year': tomorrow.year,
+        'month': tomorrow.month,
+        'day': tomorrow.day,
+        'time': [
+            '00:00', '01:00'
+        ],
+        'area': [
+            50, -180, -50, 180,
+        ],
+    },
+    tomorrow_era5_data)
+
+    # Retrieve tomorrow's data
+    with xr.open_dataset(era5_data) as f1, xr.open_dataset(tomorrow_era5_data) as f2:
+        era5_ds = xr.merge([f1.load(), f2.load()])
+        era5_ds.to_netcdf(target_data)
 
     print('SUCCESS: Retrieved ERA5 data')
     
