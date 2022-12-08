@@ -1,8 +1,14 @@
-# cygnss-deployment
+# Web Interface for Wind Speed Prediction
 
-Deploy a pre-trained CyGNSSnet to predict global ocean wind speed in near time.
+## About
+
+The objective of this repository is to deploy a pre-trained *CyGNSSnet* to predict global ocean wind speed in near time. The results are shoen on a web interface, which provides different illustrations of the predicted wind speed and its error compared to [ERA5 windspeed](https://www.ecmwf.int/en/forecasts/datasets/reanalysis-datasets/era5) data. 
+
+*CyGNSSnet* is a neural net developed to predict wind speed from [CYGNSS](https://podaac.jpl.nasa.gov/dataset/CYGNSS_L2_V3.0)(**Cy**clone **G**lobal **N**avigation **S**atellite **S**ystem) data. The code for *CyGNSSnet* itself is not public. For more information or if you need to access it contact Caroline Arnold (arnold@dkrz.de) or the Helmholtz AI consultant team for Earth and Environment (consultant-helmholtz.ai@dkrz.de).   
 
 ## Getting started
+
+In order to start the deployment ...
 
 #### Working: This code will run prefect tasks. And, resulting data will be saved in database. Then, from updated database, data will be shown in streamlit dashboard to the user.
 
