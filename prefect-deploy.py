@@ -16,55 +16,29 @@ import mlflow
 from prefect import flow, task
 import streamlit as st
 # TODO Fix these imports
-#from prefect.deployments import DeploymentSpec
+# from prefect.deployments import DeploymentSpec
 #from prefect.flow_runners import SubprocessFlowRunner
-#from prefect.orion.schemas.schedules import IntervalSchedule
-#from prefect.deployments import Deployment
+from prefect.orion.schemas.schedules import IntervalSchedule
+from prefect.deployments import Deployment
 from prefect.filesystems import RemoteFileSystem
 from prefect.infrastructure import DockerContainer
 from prefect.task_runners import SequentialTaskRunner
 from pymongo import MongoClient, errors
-#from API import download_raw_data
-from datetime import datetime, timedelta
-sys.path.append('./2020-03-gfz-remote-sensing')
-sys.path.append('./2020-03-gfz-remote-sensing/gfz_202003')
-sys.path.append('./2020-03-gfz-remote-sensing/gfz_202003/training')
+from API import download_raw_data
+from datetime import datetime, timedelta, date
+sys.path.append('./externals/gfz_cygnss/')
+sys.path.append('./externals/gfz_cygnss/gfz_202003')
+sys.path.append('./externals/gfz_cygnss/gfz_202003/training')
 
-from cygnssnet import ImageNet, DenseNet, CyGNSSNet, CyGNSSDataModule, CyGNSSDataset
+from cygnssnet import ImageNet, DenseNet, CyGNSSNet, CyGNSSDataset, CyGNSSDataModule
 import plots
+from Preprocessing import pre_processing
 
 @task
-def download_data():
-    download_data_date = datetime.date.today() - datetime.timedelta(days=10)
-    download_raw_data(year = download_data_date.year, month = download_data_date.month, day = download_data_date.day)
+def download_data(year, month, day):
+    # Using API calls
+    download_raw_data(year, month, day)
     
-#@task
-#def write_data(client):
-#        data_1 = {
-#        "rmse": 3.1, 
-#        "event_date":  datetime.datetime(2022, 8, 10),
-#        "image_url": "https://www.dkrz.de/en/about-en/aufgaben/dkrz-and-climate-research/@@images/image/large"
-#        }
-
-#        data_2 = {
-#        "rmse": 2.1,         
-#        "event_date":  datetime.datetime(2022, 8, 9),
-#        "image_url": "https://www.dkrz.de/en/about-en/aufgaben/dkrz-and-climate-research/@@images/image/large"
-#        }
-
-#        data_3 = {
-#        "rmse": 3.2,         
-#        "event_date":  datetime.datetime(2022, 8, 8),
-#        "image_url": "https://www.dkrz.de/en/about-en/aufgaben/dkrz-and-climate-research/@@images/image/large"
-#        }
-
-
-#        cygnss_collection = client["cygnss"].cygnss_collection
-
-#        cygnss_collection = cygnss_collection.insert_many([data_1, data_2, data_3])
-
-#        print(f"Multiple tutorials: {cygnss_collection.inserted_ids}")
-
 @task
 def get_data(client):        
         cygnss = client.cygnss                        
@@ -80,7 +54,7 @@ def drop_database(client):
 
 @task
 @st.experimental_singleton
-def save_to_db(domain, port, y_pred, rmse, date, rmse_time):
+def save_to_db(domain, port, y_pred, rmse, date_, rmse_time):
     # use a try-except indentation to catch MongoClient() errors
     try:
         print('entering mongo db connection')
@@ -94,27 +68,26 @@ def save_to_db(domain, port, y_pred, rmse, date, rmse_time):
         password = "example",
     )
 
-       # uncomment and if you wanna clear out the data
-        client.drop_database('cygnss')
+        # uncomment and if you wanna clear out the data
+        #client.drop_database('cygnss')
 
         # print the version of MongoDB server if connection successful
         print ("server version:", client.server_info()["version"])
-        
         data = {
                 "rmse": rmse.tolist(),
                 "bin_rmse": rmse_time["rmse"].tolist(),
                 "bin_bias": rmse_time["bias"].tolist(),
                 "bin_counts": rmse_time["counts"].tolist(),
-                "event_date": date,
-                "scatterplot_path": f"{os.path.dirname(__file__)}/plots/scatter.png",
-                "histogram_path": f"{os.path.dirname(__file__)}/plots/histo.png",
-                "era_average_path": f"{os.path.dirname(__file__)}/plots/era_average.png",
-                "rmse_average_path": f"{os.path.dirname(__file__)}/plots/rmse_average.png",
-                "today_longrunavg_path": f"{os.path.dirname(__file__)}/plots/today_longrunavg.png",
-                "today_long_bias_path": f"{os.path.dirname(__file__)}/plots/today_long_bias.png",
-                "sample_counts_path": f"{os.path.dirname(__file__)}/plots/sample_counts.png",
-                "rmse_bins_era_path": f"{os.path.dirname(__file__)}/plots/rmse_bins_era.png",
-                "bias_bins_era_path": f"{os.path.dirname(__file__)}/plots/bias_bins_era.png",
+                "event_date": date_,
+                "scatterplot_path": f"{os.path.dirname(__file__)}/plots/scatter_{date_}.png",
+                "histogram_path": f"{os.path.dirname(__file__)}/plots/histo_{date_}.png",
+                "era_average_path": f"{os.path.dirname(__file__)}/plots/era_average_{date_}.png",
+                "rmse_average_path": f"{os.path.dirname(__file__)}/plots/rmse_average_{date_}.png",
+                "today_longrunavg_path": f"{os.path.dirname(__file__)}/plots/today_longrunavg_{date_}.png",
+                "today_long_bias_path": f"{os.path.dirname(__file__)}/plots/today_long_bias_{date_}.png",
+                "sample_counts_path": f"{os.path.dirname(__file__)}/plots/sample_counts_{date_}.png",
+                "rmse_bins_era_path": f"{os.path.dirname(__file__)}/plots/rmse_bins_era_{date_}.png",
+                "bias_bins_era_path": f"{os.path.dirname(__file__)}/plots/bias_bins_era_{date_}.png",
                 "y_pred": y_pred.tolist()
                 }
 
@@ -138,6 +111,7 @@ def get_hyper_params(model_path, model, data_path):
     checkpoint = torch.load(os.path.join(model_path, model),
                     map_location=torch.device("cpu"))
     checkpoint['hyper_parameters']["data"] = data_path
+    checkpoint['hyper_parameters']["num_workers"] = 1
     col_idx_lat = checkpoint["hyper_parameters"]["v_par_eval"].index('sp_lat')
     col_idx_lon = checkpoint["hyper_parameters"]["v_par_eval"].index('sp_lon')
     args = namedtuple("ObjectName", checkpoint['hyper_parameters'].keys())\
@@ -196,24 +170,23 @@ def rmse_over_time(y_bins, df_rmse):
     df_mockup = pd.concat([df_rmse, df_mockup], ignore_index=True)
     return df_mockup
 
-@flow(task_runner=SequentialTaskRunner())
+@flow
 def main():
 
-    # Download data for the past 10th day from today, today - 10th day
-    #download_data()
-    
-    # TODO
-    # pre_process()
+    # Define the date and pass it to the individual tasks
+    download_date = date.today() - timedelta(days=10)
+    date_ = download_date.strftime("%Y-%m-%d")
 
-    # TODO: get date from preprocessing
-    now = datetime.now()
-    date = datetime(now.year, now.month, now.day) - timedelta(days=10)
-    #date = datetime.datetime(2022, 9, 10)
-    
-    model_path = './2022-cygnss-deployment/'\
-            'cygnss_trained_model/ygambdos_yykDM/checkpoint'
-    model = 'cygnssnet-epoch=0.ckpt'
-    data_path = './2022-cygnss-deployment/small_data/' #'../data' # TODO, change the path outside of code, in a separete folder
+    # Download data for the past 10th day from today, today - 10th day
+    download_data(year=download_date.year, month=download_date.month, day=download_date.day)
+
+    # annotate data
+    # create filtered hdf5 from preprocessing
+    pre_processing(download_date.year, download_date.month, download_date.day, './dev_data/')
+
+    model_path = './externals/gfz_cygnss/trained_models/'
+    model = 'ygambdos_yykDM.ckpt'
+    data_path = './dev_data/' #'../data' # TODO, change the path outside of code, in a separete folder
     h5_file = h5py.File(os.path.join(data_path, 'test_data.h5'), 'r', rdcc_nbytes=0)
 
     mlflow.set_tracking_uri("sqlite:///mlruns.db") # TODO: change this to other db
@@ -237,7 +210,7 @@ def main():
 
     test_loader = cdm.test_dataloader()    
     # make predictions
-    y_pred = make_predictions.submit(test_loader, cygnss_model).result()
+    y_pred = make_predictions(test_loader, cygnss_model)
     
     # get true labels
     dataset = CyGNSSDataset('test', args)
@@ -254,38 +227,31 @@ def main():
     # make plots
     sp_lat = test_loader.dataset.v_par_eval[:, col_idx_lat]
     sp_lon = test_loader.dataset.v_par_eval[:, col_idx_lon]
-    plots.make_scatterplot(y, y_pred)
-    plots.make_histogram(y, y_pred)
-    plots.era_average(y, sp_lon, sp_lat)
-    plots.rmse_average(y, y_pred, sp_lon, sp_lat)
-    plots.today_longrunavg(df_mockup, y_bins)
-    plots.today_longrunavg_bias(df_mockup, y_bins)
-    plots.sample_counts(df_rmse, y_bins)
-    plots.rmse_bins_era(df_rmse, y_bins)
-    plots.bias_bins_era(df_rmse, y_bins)
+    plots.make_scatterplot(y, y_pred, date_)
+    plots.make_histogram(y, y_pred, date_)
+    #plots.era_average(y, sp_lon, sp_lat, date_)
+    #plots.rmse_average(y, y_pred, sp_lon, sp_lat, date_)
+    plots.today_longrunavg(df_mockup, y_bins, date_)
+    plots.today_longrunavg_bias(df_mockup, y_bins, date_)
+    plots.sample_counts(df_rmse, y_bins, date_)
+    plots.rmse_bins_era(df_rmse, y_bins, date_)
+    plots.bias_bins_era(df_rmse, y_bins, date_)
     # global variables for MongoDB host (default port is 27017)
     DOMAIN = 'mongodb'
     PORT = 27017
     
     # Save results to the mongo database
     save_to_db(domain=DOMAIN, port=PORT, y_pred=y_pred, \
-            rmse=rmse, date=date, rmse_time=df_rmse)
-
-main()        
+            rmse=rmse, date_=date_, rmse_time=df_rmse)
 
 
-#deployment = Deployment.build_from_flow(
-#    flow=main,
-#    name="cygnss",
-#    storage=RemoteFileSystem.load('minio')
-#    infrastructure=DockerContainer(
-#        image = 'prefect-orion:2.4.5',
-#        image_pull_policy = 'IF_NOT_PRESENT',
-#        networks = ['backend'],
-#    ),
-#    work_queue_name="cygnss-deployment",
-#)
+if __name__ == "__main__":    
 
-#if __name__ == "__main__":
-#    deployment.apply()
-
+    deployment = Deployment.build_from_flow(
+        schedule = IntervalSchedule(interval=timedelta(days=1)),
+        flow=main,  
+        name="cygnss",  
+        work_queue_name="demo"
+    )
+    deployment.apply()
+    #main()

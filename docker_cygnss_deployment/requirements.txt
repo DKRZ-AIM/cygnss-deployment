@@ -1,15 +1,13 @@
 streamlit
-sklearn
+scikit-learn
 pandas
-numpy
+numpy==1.23.4
 requests
 Pillow
 pymongo
 mlflow
 pandas
 matplotlib
-numpy
-xarray
 scipy
 h5py
 netcdf4
@@ -19,5 +17,6 @@ pytorch-lightning==1.5.10
 cdsapi
 podaac-data-subscriber
 global-land-mask
-prefect==2.3.2
+prefect==2.6.8
 sqlalchemy
+dask

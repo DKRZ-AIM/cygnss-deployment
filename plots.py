@@ -8,18 +8,53 @@ import seaborn as sns
 import cartopy.crs as ccrs
 from cartopy.mpl.ticker import LongitudeFormatter, LatitudeFormatter
 from mpl_toolkits.axes_grid1 import AxesGrid
-#sys.path.append('../externals/gfz_cygnss/')
-import utils.mathematics as mat
+import itertools
+plt.switch_backend('agg')
 
 deg = 1 # grid resolution (publication: 1)
-
-#xx, yy, gridded_y_pred = mat.average_to_grid2(sp_lon[:], sp_lat[:], y_pred[:], resolution=deg)
-#xx, yy, gridded_bias = mat.average_to_grid2(sp_lon[:], sp_lat[:], y_pred[:] - y_true[:], resolution=deg)
 
 grid_lon = np.arange(-180, 181, deg)
 grid_lat = np.arange(-90, 91, deg)
 
-def make_scatterplot(y_true, y_pred):
+def average_to_grid2(lon, lat, var, resolution=1, fill_value=-1):
+    '''
+    Grid a time-dependent variable in lon/lat and average over all counts
+    
+    lon - time series of lon coordinate (1D) (0...360)
+    lat - time series of lat coordinate (1D)
+    var - time series of variable (1D)
+    resolution - target grid resolution (default: 1 deg)
+    fill_value - a value that can be used for filling (i.e. that does not show up in var)
+    
+    Returns:
+    2D gridded arrays for lat, lon, count-averaged var
+    '''
+
+    assert len(lon) == len(lat)
+    assert len(lon) == len(var)
+
+    grid_lon = np.arange(0, 360+resolution, resolution)
+    grid_lat = np.arange(-90, 90+resolution, resolution)[::-1] # top left is +lat
+
+    ix_lon = np.digitize(lon, grid_lon)
+    ix_lat = np.digitize(lat, grid_lat)
+
+    xx, yy = np.meshgrid(grid_lon, grid_lat, indexing='ij')
+    gridded_var = np.empty(xx.shape, dtype='float')
+    gridded_var[:] = fill_value
+
+    ij = itertools.product(np.unique(ix_lon), np.unique(ix_lat))
+
+    for i,j in ij:
+        cond = (ix_lon==i) & (ix_lat==j)
+        gridded_var[i,j] = np.mean(var[cond])
+
+    gridded_var[gridded_var==fill_value] = None
+
+
+    return xx, yy, gridded_var
+
+def make_scatterplot(y_true, y_pred, date_):
     ymin = 2.5
     ymax = 25.0
 
@@ -47,10 +82,10 @@ def make_scatterplot(y_true, y_pred):
     ax.set_yticklabels([5, 10, 15, 20, 25])
 
     fig.tight_layout()
-    plt.savefig(f'{os.path.dirname(__file__)}/plots/scatter.png')
+    plt.savefig(f'{os.path.dirname(__file__)}/plots/scatter_{date_}.png')
 
 
-def make_histogram(y_true, y_pred):
+def make_histogram(y_true, y_pred, date_):
     fig=plt.figure()
     ax=fig.add_subplot(111)
 
@@ -62,11 +97,11 @@ def make_histogram(y_true, y_pred):
     ax.set_xticks([5, 10, 15, 20, 25])
     ax.set_xticklabels([5, 10, 15, 20, 25])
     ax.set_xlabel('ERA5 wind speed (m/s)')
-    plt.savefig(f'{os.path.dirname(__file__)}/plots/histo.png')
+    plt.savefig(f'{os.path.dirname(__file__)}/plots/histo_{date_}.png')
 
 
-def era_average(y_true, sp_lon, sp_lat):
-    xx, yy, gridded_y_true = mat.average_to_grid2(sp_lon[:], sp_lat[:], y_true[:], resolution=deg)
+def era_average(y_true, sp_lon, sp_lat, date_):
+    xx, yy, gridded_y_true = average_to_grid2(sp_lon[:], sp_lat[:], y_true[:], resolution=deg)
     proj = ccrs.PlateCarree(180)
     
     fig, ax = plt.subplots(1, 1, figsize=(6,4), gridspec_kw=dict(hspace=0.05, wspace=0.1), subplot_kw=dict(projection=proj))
@@ -83,10 +118,10 @@ def era_average(y_true, sp_lon, sp_lat):
     gl.xlabel_style = {'size': 8, 'color': 'black'}
     gl.ylabel_style = {'size': 8, 'color': 'black'}
 
-    plt.savefig(f'{os.path.dirname(__file__)}/plots/era_average.png')
+    plt.savefig(f'{os.path.dirname(__file__)}/plots/era_average_{date_}.png')
 
 def rmse_average(y_true, y_pred, sp_lon, sp_lat):
-    xx, yy, gridded_rmse = mat.average_to_grid2(sp_lon[:], sp_lat[:], np.abs(y_pred[:] - y_true[:]), resolution=deg)
+    xx, yy, gridded_rmse = average_to_grid2(sp_lon[:], sp_lat[:], np.abs(y_pred[:] - y_true[:]), resolution=deg)
     proj = ccrs.PlateCarree(180)
     fig, ax = plt.subplots(1, 1, figsize=(6,4), gridspec_kw=dict(hspace=0.05, wspace=0.1), subplot_kw=dict(projection=proj))
     cmap = ax.contourf(grid_lon[:], grid_lat[::-1][:], gridded_rmse[:].T, levels=60, transform=proj, antialiased=False, cmap='viridis')
@@ -103,7 +138,7 @@ def rmse_average(y_true, y_pred, sp_lon, sp_lat):
     gl.ylabel_style = {'size': 8, 'color': 'black'}
 
 
-def today_longrunavg(df_mockup, y_bins):
+def today_longrunavg(df_mockup, y_bins, date_):
     
     fig=plt.figure(figsize=(10,4))
     ax=fig.add_subplot(111)
@@ -117,9 +152,9 @@ def today_longrunavg(df_mockup, y_bins):
     ax.set_xticks(range(len(y_bins)))
     ax.set_xticklabels([f'< {yy} m/s' for yy in y_bins])
 
-    plt.savefig(f'{os.path.dirname(__file__)}/plots/today_longrunavg.png')
+    plt.savefig(f'{os.path.dirname(__file__)}/plots/today_longrunavg_{date_}.png')
 
-def today_longrunavg_bias(df_mockup, y_bins):
+def today_longrunavg_bias(df_mockup, y_bins, date_):
 
     fig=plt.figure(figsize=(10,4))
     ax=fig.add_subplot(111)
@@ -133,9 +168,9 @@ def today_longrunavg_bias(df_mockup, y_bins):
     ax.set_xticks(range(len(y_bins)))
     ax.set_xticklabels([f'< {yy} m/s' for yy in y_bins])
     
-    plt.savefig(f'{os.path.dirname(__file__)}/plots/today_long_bias.png')
+    plt.savefig(f'{os.path.dirname(__file__)}/plots/today_long_bias_{date_}.png')
 
-def sample_counts(df_rmse, y_bins):
+def sample_counts(df_rmse, y_bins, date_):
 
     fig=plt.figure(figsize=(10,4))
     ax=fig.add_subplot(111)
@@ -146,9 +181,9 @@ def sample_counts(df_rmse, y_bins):
     ax.set_xticks(range(len(y_bins)))
     ax.set_xticklabels([f'< {yy} m/s' for yy in y_bins])
 
-    plt.savefig(f'{os.path.dirname(__file__)}/plots/sample_counts.png')
+    plt.savefig(f'{os.path.dirname(__file__)}/plots/sample_counts_{date_}.png')
 
-def rmse_bins_era(df_rmse, y_bins):
+def rmse_bins_era(df_rmse, y_bins, date_):
 
     fig=plt.figure(figsize=(10,4))
     ax=fig.add_subplot(111)
@@ -159,9 +194,9 @@ def rmse_bins_era(df_rmse, y_bins):
     ax.set_xticks(range(len(y_bins)))
     ax.set_xticklabels([f'< {yy} m/s' for yy in y_bins])
 
-    plt.savefig(f'{os.path.dirname(__file__)}/plots/rmse_bins_era.png')
+    plt.savefig(f'{os.path.dirname(__file__)}/plots/rmse_bins_era_{date_}.png')
 
-def bias_bins_era(df_rmse, y_bins):
+def bias_bins_era(df_rmse, y_bins, date_):
 
     fig=plt.figure(figsize=(10,4))
     ax=fig.add_subplot(111)
@@ -172,4 +207,4 @@ def bias_bins_era(df_rmse, y_bins):
     ax.set_xticks(range(len(y_bins)))
     ax.set_xticklabels([f'< {yy} m/s' for yy in y_bins])
  
-    plt.savefig(f'{os.path.dirname(__file__)}/plots/bias_bins_era.png')
+    plt.savefig(f'{os.path.dirname(__file__)}/plots/bias_bins_era_{date_}.png')
