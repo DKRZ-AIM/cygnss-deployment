@@ -14,6 +14,7 @@ def main(offset):
     date_ = download_date.strftime("%Y-%m-%d")
 
     raw_data_root = '/work/ka1176/shared_data/2020-03/raw_data_v3-1'
+    annotated_raw_data_root = '/work/ka1176/shared_data/2020-03/annotated_raw_data_v3-1'
 
     print("*"*50)
     print("  Download date", date_)
@@ -24,7 +25,8 @@ def main(offset):
 
     # annotate data
     # create filtered hdf5 from preprocessing
-    pre_processing(download_date.year, download_date.month, download_date.day, '/scratch/k202141/')
+    pre_processing(download_date.year, download_date.month, download_date.day, dev_data_dir='/scratch/k/k202141/',
+                   raw_data_root=raw_data_root, annotated_raw_data_root=annotated_raw_data_root)
 
 if __name__ == "__main__":    
 

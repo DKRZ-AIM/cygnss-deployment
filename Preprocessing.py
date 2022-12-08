@@ -17,7 +17,7 @@ import numpy as np
 import xarray as xr
 import hashlib
 
-def pre_processing(year, month, day, dev_data_dir='./dev_data'):
+def pre_processing(year, month, day, dev_data_dir='./dev_data', raw_data_root='./raw_data', annotated_raw_data_root='./annotated_raw_data'):
     '''
     Preprocessing routines for CyGNSSnet
 
@@ -33,14 +33,13 @@ def pre_processing(year, month, day, dev_data_dir='./dev_data'):
     Parameters:
       year, month, day - preprocess the data downloaded for that day
       dev_data_dir     - directory to store the filtered data for that day
+      raw_data_root    - where to find the downloaded raw data
+      annotated_raw_data_root - where to store the annotated raw data
 
     Returns:
       h5_file - path to the filtered data for that day
     '''
 
-    raw_data_root = './raw_data'
-    annotated_raw_data_root = './annotated_raw_data'
-        
     raw_data_sub = datetime.strptime(f"{year}-{month}-{day}", "%Y-%m-%d").strftime("%Y/%j")
 
     raw_data_dir = os.path.join(raw_data_root, raw_data_sub)
