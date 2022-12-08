@@ -38,7 +38,7 @@ def init_connection():
 @st.experimental_memo(ttl=600)
 def get_data(date_):        
         cygnss = client.cygnss        
-        from_date = datetime.datetime.combine(date_, datetime.time())
+        from_date = date_
         criteria = {"event_date": {"$eq": from_date}}
         items = cygnss.cygnss_collection.find(criteria)        
         items = list(items)  # make hashable for st.experimental_memo
@@ -58,6 +58,7 @@ client = init_connection()
 # client.drop_database('cygnss')
 
 # Fetching data
+date_ = date_.strftime("%Y-%m-%d")
 items = get_data(date_)
 
 st.subheader('Results')
@@ -93,13 +94,13 @@ if option == 'Visualization':
         st.markdown(f"## Histogram: ERA5 wind speed and predicted wind speed")
         st.image(histo, caption="Histogram")
 
-        era_avg = Image.open(item['era_average_path'])
-        st.markdown(f"## ERA 5 Average")
-        st.image(era_avg, caption="ERA5 average")
+        #era_avg = Image.open(item['era_average_path'])
+        #st.markdown(f"## ERA 5 Average")
+        #st.image(era_avg, caption="ERA5 average")
 
-        rmse_avg = Image.open(item['rmse_average_path'])
-        st.markdown(f"## RMSE Average")
-        st.image(rmse_avg, caption="RMSE average")
+        #rmse_avg = Image.open(item['rmse_average_path'])
+        #st.markdown(f"## RMSE Average")
+        #st.image(rmse_avg, caption="RMSE average")
 
         today_longavg = Image.open(item['today_longrunavg_path'])
         st.markdown(f"## RMSE - Today and Longrun Average")

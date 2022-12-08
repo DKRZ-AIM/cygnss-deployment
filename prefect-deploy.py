@@ -54,7 +54,7 @@ def drop_database(client):
 
 @task
 @st.experimental_singleton
-def save_to_db(domain, port, y_pred, rmse, date, rmse_time):
+def save_to_db(domain, port, y_pred, rmse, date_, rmse_time):
     # use a try-except indentation to catch MongoClient() errors
     try:
         print('entering mongo db connection')
@@ -68,27 +68,26 @@ def save_to_db(domain, port, y_pred, rmse, date, rmse_time):
         password = "example",
     )
 
-       # uncomment and if you wanna clear out the data
-        client.drop_database('cygnss')
+        # uncomment and if you wanna clear out the data
+        #client.drop_database('cygnss')
 
         # print the version of MongoDB server if connection successful
         print ("server version:", client.server_info()["version"])
-        
         data = {
                 "rmse": rmse.tolist(),
                 "bin_rmse": rmse_time["rmse"].tolist(),
                 "bin_bias": rmse_time["bias"].tolist(),
                 "bin_counts": rmse_time["counts"].tolist(),
-                "event_date": date,
-                "scatterplot_path": f"{os.path.dirname(__file__)}/plots/scatter.png",
-                "histogram_path": f"{os.path.dirname(__file__)}/plots/histo.png",
-                "era_average_path": f"{os.path.dirname(__file__)}/plots/era_average.png",
-                "rmse_average_path": f"{os.path.dirname(__file__)}/plots/rmse_average.png",
-                "today_longrunavg_path": f"{os.path.dirname(__file__)}/plots/today_longrunavg.png",
-                "today_long_bias_path": f"{os.path.dirname(__file__)}/plots/today_long_bias.png",
-                "sample_counts_path": f"{os.path.dirname(__file__)}/plots/sample_counts.png",
-                "rmse_bins_era_path": f"{os.path.dirname(__file__)}/plots/rmse_bins_era.png",
-                "bias_bins_era_path": f"{os.path.dirname(__file__)}/plots/bias_bins_era.png",
+                "event_date": date_,
+                "scatterplot_path": f"{os.path.dirname(__file__)}/plots/scatter_{date_}.png",
+                "histogram_path": f"{os.path.dirname(__file__)}/plots/histo_{date_}.png",
+                "era_average_path": f"{os.path.dirname(__file__)}/plots/era_average_{date_}.png",
+                "rmse_average_path": f"{os.path.dirname(__file__)}/plots/rmse_average_{date_}.png",
+                "today_longrunavg_path": f"{os.path.dirname(__file__)}/plots/today_longrunavg_{date_}.png",
+                "today_long_bias_path": f"{os.path.dirname(__file__)}/plots/today_long_bias_{date_}.png",
+                "sample_counts_path": f"{os.path.dirname(__file__)}/plots/sample_counts_{date_}.png",
+                "rmse_bins_era_path": f"{os.path.dirname(__file__)}/plots/rmse_bins_era_{date_}.png",
+                "bias_bins_era_path": f"{os.path.dirname(__file__)}/plots/bias_bins_era_{date_}.png",
                 "y_pred": y_pred.tolist()
                 }
 
@@ -175,6 +174,7 @@ def main():
 
     # Define the date and pass it to the individual tasks
     download_date = date.today() - timedelta(days=10)
+    date_ = download_date.strftime("%Y-%m-%d")
 
     # Download data for the past 10th day from today, today - 10th day
     download_data(year=download_date.year, month=download_date.month, day=download_date.day)
@@ -226,31 +226,31 @@ def main():
     # make plots
     sp_lat = test_loader.dataset.v_par_eval[:, col_idx_lat]
     sp_lon = test_loader.dataset.v_par_eval[:, col_idx_lon]
-    plots.make_scatterplot(y, y_pred)
-    plots.make_histogram(y, y_pred)
-    plots.era_average(y, sp_lon, sp_lat)
-    plots.rmse_average(y, y_pred, sp_lon, sp_lat)
-    plots.today_longrunavg(df_mockup, y_bins)
-    plots.today_longrunavg_bias(df_mockup, y_bins)
-    plots.sample_counts(df_rmse, y_bins)
-    plots.rmse_bins_era(df_rmse, y_bins)
-    plots.bias_bins_era(df_rmse, y_bins)
+    plots.make_scatterplot(y, y_pred, date_)
+    plots.make_histogram(y, y_pred, date_)
+    #plots.era_average(y, sp_lon, sp_lat, date_)
+    #plots.rmse_average(y, y_pred, sp_lon, sp_lat, date_)
+    plots.today_longrunavg(df_mockup, y_bins, date_)
+    plots.today_longrunavg_bias(df_mockup, y_bins, date_)
+    plots.sample_counts(df_rmse, y_bins, date_)
+    plots.rmse_bins_era(df_rmse, y_bins, date_)
+    plots.bias_bins_era(df_rmse, y_bins, date_)
     # global variables for MongoDB host (default port is 27017)
     DOMAIN = 'mongodb'
     PORT = 27017
     
     # Save results to the mongo database
     save_to_db(domain=DOMAIN, port=PORT, y_pred=y_pred, \
-            rmse=rmse, date=date, rmse_time=df_rmse)
+            rmse=rmse, date_=date_, rmse_time=df_rmse)
 
 
 if __name__ == "__main__":    
 
-    #deployment = Deployment.build_from_flow(
-    #    schedule = IntervalSchedule(interval=timedelta(minutes=2)),
-    #    flow=main,  
-    #    name="cygnss",  
-    #    work_queue_name="demo"
-    #)
-    #deployment.apply()
-    main()
+    deployment = Deployment.build_from_flow(
+        schedule = IntervalSchedule(interval=timedelta(days=1)),
+        flow=main,  
+        name="cygnss",  
+        work_queue_name="demo"
+    )
+    deployment.apply()
+    #main()

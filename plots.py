@@ -54,7 +54,7 @@ def average_to_grid2(lon, lat, var, resolution=1, fill_value=-1):
 
     return xx, yy, gridded_var
 
-def make_scatterplot(y_true, y_pred):
+def make_scatterplot(y_true, y_pred, date_):
     ymin = 2.5
     ymax = 25.0
 
@@ -82,10 +82,10 @@ def make_scatterplot(y_true, y_pred):
     ax.set_yticklabels([5, 10, 15, 20, 25])
 
     fig.tight_layout()
-    plt.savefig(f'{os.path.dirname(__file__)}/plots/scatter.png')
+    plt.savefig(f'{os.path.dirname(__file__)}/plots/scatter_{date_}.png')
 
 
-def make_histogram(y_true, y_pred):
+def make_histogram(y_true, y_pred, date_):
     fig=plt.figure()
     ax=fig.add_subplot(111)
 
@@ -97,10 +97,10 @@ def make_histogram(y_true, y_pred):
     ax.set_xticks([5, 10, 15, 20, 25])
     ax.set_xticklabels([5, 10, 15, 20, 25])
     ax.set_xlabel('ERA5 wind speed (m/s)')
-    plt.savefig(f'{os.path.dirname(__file__)}/plots/histo.png')
+    plt.savefig(f'{os.path.dirname(__file__)}/plots/histo_{date_}.png')
 
 
-def era_average(y_true, sp_lon, sp_lat):
+def era_average(y_true, sp_lon, sp_lat, date_):
     xx, yy, gridded_y_true = average_to_grid2(sp_lon[:], sp_lat[:], y_true[:], resolution=deg)
     proj = ccrs.PlateCarree(180)
     
@@ -118,7 +118,7 @@ def era_average(y_true, sp_lon, sp_lat):
     gl.xlabel_style = {'size': 8, 'color': 'black'}
     gl.ylabel_style = {'size': 8, 'color': 'black'}
 
-    plt.savefig(f'{os.path.dirname(__file__)}/plots/era_average.png')
+    plt.savefig(f'{os.path.dirname(__file__)}/plots/era_average_{date_}.png')
 
 def rmse_average(y_true, y_pred, sp_lon, sp_lat):
     xx, yy, gridded_rmse = average_to_grid2(sp_lon[:], sp_lat[:], np.abs(y_pred[:] - y_true[:]), resolution=deg)
@@ -138,7 +138,7 @@ def rmse_average(y_true, y_pred, sp_lon, sp_lat):
     gl.ylabel_style = {'size': 8, 'color': 'black'}
 
 
-def today_longrunavg(df_mockup, y_bins):
+def today_longrunavg(df_mockup, y_bins, date_):
     
     fig=plt.figure(figsize=(10,4))
     ax=fig.add_subplot(111)
@@ -152,9 +152,9 @@ def today_longrunavg(df_mockup, y_bins):
     ax.set_xticks(range(len(y_bins)))
     ax.set_xticklabels([f'< {yy} m/s' for yy in y_bins])
 
-    plt.savefig(f'{os.path.dirname(__file__)}/plots/today_longrunavg.png')
+    plt.savefig(f'{os.path.dirname(__file__)}/plots/today_longrunavg_{date_}.png')
 
-def today_longrunavg_bias(df_mockup, y_bins):
+def today_longrunavg_bias(df_mockup, y_bins, date_):
 
     fig=plt.figure(figsize=(10,4))
     ax=fig.add_subplot(111)
@@ -168,9 +168,9 @@ def today_longrunavg_bias(df_mockup, y_bins):
     ax.set_xticks(range(len(y_bins)))
     ax.set_xticklabels([f'< {yy} m/s' for yy in y_bins])
     
-    plt.savefig(f'{os.path.dirname(__file__)}/plots/today_long_bias.png')
+    plt.savefig(f'{os.path.dirname(__file__)}/plots/today_long_bias_{date_}.png')
 
-def sample_counts(df_rmse, y_bins):
+def sample_counts(df_rmse, y_bins, date_):
 
     fig=plt.figure(figsize=(10,4))
     ax=fig.add_subplot(111)
@@ -181,9 +181,9 @@ def sample_counts(df_rmse, y_bins):
     ax.set_xticks(range(len(y_bins)))
     ax.set_xticklabels([f'< {yy} m/s' for yy in y_bins])
 
-    plt.savefig(f'{os.path.dirname(__file__)}/plots/sample_counts.png')
+    plt.savefig(f'{os.path.dirname(__file__)}/plots/sample_counts_{date_}.png')
 
-def rmse_bins_era(df_rmse, y_bins):
+def rmse_bins_era(df_rmse, y_bins, date_):
 
     fig=plt.figure(figsize=(10,4))
     ax=fig.add_subplot(111)
@@ -194,9 +194,9 @@ def rmse_bins_era(df_rmse, y_bins):
     ax.set_xticks(range(len(y_bins)))
     ax.set_xticklabels([f'< {yy} m/s' for yy in y_bins])
 
-    plt.savefig(f'{os.path.dirname(__file__)}/plots/rmse_bins_era.png')
+    plt.savefig(f'{os.path.dirname(__file__)}/plots/rmse_bins_era_{date_}.png')
 
-def bias_bins_era(df_rmse, y_bins):
+def bias_bins_era(df_rmse, y_bins, date_):
 
     fig=plt.figure(figsize=(10,4))
     ax=fig.add_subplot(111)
@@ -207,4 +207,4 @@ def bias_bins_era(df_rmse, y_bins):
     ax.set_xticks(range(len(y_bins)))
     ax.set_xticklabels([f'< {yy} m/s' for yy in y_bins])
  
-    plt.savefig(f'{os.path.dirname(__file__)}/plots/bias_bins_era.png')
+    plt.savefig(f'{os.path.dirname(__file__)}/plots/bias_bins_era_{date_}.png')
