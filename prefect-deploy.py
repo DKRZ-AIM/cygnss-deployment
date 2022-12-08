@@ -154,7 +154,7 @@ def rmse_bins(y_true, y_pred, y_bins):
             all_bias[i] = None
             all_counts[i] = 0
         df_rmse = pd.DataFrame(dict(rmse=all_rmse, bias=all_bias, bins=y_bins, counts=all_counts))
-        return df_rmse
+    return df_rmse
 
 @task
 def rmse_over_time(y_bins, df_rmse):
