@@ -35,7 +35,7 @@ def download_raw_data(year, month, day, raw_data_root='raw_data'):
     print('Downloading data in this directory: ', raw_data_dir)
 
     start_date = datetime(year, month, day).strftime("%Y-%m-%dT%H:%M:%SZ")
-    end_date   = datetime(year, month, day + 1).strftime("%Y-%m-%dT%H:%M:%SZ")
+    end_date   = (datetime(year, month, day) + timedelta(1)).strftime("%Y-%m-%dT%H:%M:%SZ")
 
     print(f'--start-date {start_date}')
     print(f'--end-date   {end_date}')
