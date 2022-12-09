@@ -17,7 +17,7 @@ import numpy as np
 import xarray as xr
 import hashlib
 
-def pre_processing(year, month, day, dev_data_dir='./dev_data', raw_data_root='./raw_data', annotated_raw_data_root='./annotated_raw_data'):
+def pre_processing(year, month, day, dev_data_dir='./dev_data', raw_data_root=os.path.join(os.path.dirname(__file__), 'raw_data'), annotated_raw_data_root=os.path.join(os.path.dirname(__file__), 'annotated_raw_data')):
     '''
     Preprocessing routines for CyGNSSnet
 

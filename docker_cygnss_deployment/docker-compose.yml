@@ -33,7 +33,7 @@ services:
     user: "${UID}:${GID}"
     build: .    
     volumes:
-      - "./../:/app/"         
+      - "./../:."         
       - ${HOME}/.netrc:/.netrc
       - ${HOME}/.cdsapirc:/.cdsapirc
     ports:
@@ -74,7 +74,7 @@ services:
     build: .
     entrypoint: ["prefect", "agent", "start", "-q", "demo"]
     volumes:
-      - "./../:/app/"
+      - "./../:."
       - ${HOME}/.netrc:/.netrc
       - ${HOME}/.cdsapirc:/.cdsapirc      
     environment:  

@@ -83,6 +83,7 @@ def make_scatterplot(y_true, y_pred, date_):
 
     fig.tight_layout()
     plt.savefig(f'{os.path.dirname(__file__)}/plots/scatter_{date_}.png')
+    print(f'scatterplot saved to {os.path.dirname(__file__)}/plots/')
 
 
 def make_histogram(y_true, y_pred, date_):
