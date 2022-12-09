@@ -36,15 +36,16 @@ To access the prefect ui: http://localhost:5000
 
 
 ## Repository Structure
-    ```
-    API.py: download CyGNSS data
-    Preprocessing.py: download ERA5 data and preprocess data
-    dashboard.py: streamlit dashboard
-    plots.py: helper functions to create the plots for the streamlit dashboard
-    prefect-deploy.py: Deployment scheduled for every day
-    externals/: folder with CyGNSSnet code
-    notebooks/: folder with some notebooks that were created during the development
-    docker_cygnss_deployment/: folder with docker files to start deployment
-    ```
+
+```
+API.py: download CyGNSS data
+Preprocessing.py: download ERA5 data and preprocess data
+dashboard.py: streamlit dashboard
+plots.py: helper functions to create the plots for the streamlit dashboard
+prefect-deploy.py: Deployment scheduled for every day
+externals/: folder with CyGNSSnet code
+notebooks/: folder with some notebooks that were created during the development
+docker_cygnss_deployment/: folder with docker files to start deployment
+```
     
 
