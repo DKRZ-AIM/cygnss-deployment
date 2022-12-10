@@ -79,15 +79,15 @@ def save_to_db(domain, port, y_pred, rmse, date_, rmse_time):
                 "bin_bias": rmse_time["bias"].tolist(),
                 "bin_counts": rmse_time["counts"].tolist(),
                 "event_date": date_,
-                "scatterplot_path": f"{os.path.dirname(__file__)}/plots/scatter_{date_}.png",
-                "histogram_path": f"{os.path.dirname(__file__)}/plots/histo_{date_}.png",
-                "era_average_path": f"{os.path.dirname(__file__)}/plots/era_average_{date_}.png",
-                "rmse_average_path": f"{os.path.dirname(__file__)}/plots/rmse_average_{date_}.png",
-                "today_longrunavg_path": f"{os.path.dirname(__file__)}/plots/today_longrunavg_{date_}.png",
-                "today_long_bias_path": f"{os.path.dirname(__file__)}/plots/today_long_bias_{date_}.png",
-                "sample_counts_path": f"{os.path.dirname(__file__)}/plots/sample_counts_{date_}.png",
-                "rmse_bins_era_path": f"{os.path.dirname(__file__)}/plots/rmse_bins_era_{date_}.png",
-                "bias_bins_era_path": f"{os.path.dirname(__file__)}/plots/bias_bins_era_{date_}.png",
+                "scatterplot_path": f"{os.path.dirname(__file__)}/app/plots/scatter_{date_}.png",
+                "histogram_path": f"{os.path.dirname(__file__)}/app/plots/histo_{date_}.png",
+                "era_average_path": f"{os.path.dirname(__file__)}/app/plots/era_average_{date_}.png",
+                "rmse_average_path": f"{os.path.dirname(__file__)}/app/plots/rmse_average_{date_}.png",
+                "today_longrunavg_path": f"{os.path.dirname(__file__)}/app/plots/today_longrunavg_{date_}.png",
+                "today_long_bias_path": f"{os.path.dirname(__file__)}/app/plots/today_long_bias_{date_}.png",
+                "sample_counts_path": f"{os.path.dirname(__file__)}/app/plots/sample_counts_{date_}.png",
+                "rmse_bins_era_path": f"{os.path.dirname(__file__)}/app/plots/rmse_bins_era_{date_}.png",
+                "bias_bins_era_path": f"{os.path.dirname(__file__)}/app/plots/bias_bins_era_{date_}.png",
                 "y_pred": y_pred.tolist()
                 }
 
@@ -182,12 +182,12 @@ def main():
 
     # annotate data
     # create filtered hdf5 from preprocessing
-    pre_processing(download_date.year, download_date.month, download_date.day, './dev_data/')
+    pre_processing(download_date.year, download_date.month, download_date.day, os.path.join(os.path.dirname(__file__), 'dev_data'))
 
-    model_path = './externals/gfz_cygnss/trained_models/'
+    model_path = os.path.join(os.path.dirname(__file__), 'externals/gfz_cygnss/trained_models/')
     model = 'ygambdos_yykDM.ckpt'
-    data_path = './dev_data/' #'../data' # TODO, change the path outside of code, in a separete folder
-    h5_file = h5py.File(os.path.join(data_path, 'test_data.h5'), 'r', rdcc_nbytes=0)
+    data_path = os.path.join(os.path.dirname(__file__), 'dev_data/') #'../data' # TODO, change the path outside of code, in a separete folder
+    h5_file = h5py.File(os.path.join(data_path, os.path.join(os.path.dirname(__file__), 'test_data.h5'), 'r', rdcc_nbytes=0))
 
     mlflow.set_tracking_uri("sqlite:///mlruns.db") # TODO: change this to other db
     mlflow.set_experiment("cygnss")

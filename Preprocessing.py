@@ -17,7 +17,7 @@ import numpy as np
 import xarray as xr
 import hashlib
 
-def pre_processing(year, month, day, dev_data_dir='./dev_data', raw_data_root=os.path.join(os.path.dirname(__file__), 'raw_data'), annotated_raw_data_root=os.path.join(os.path.dirname(__file__), 'annotated_raw_data')):
+def pre_processing(year, month, day, dev_data_dir=os.path.join(os.path.dirname(__file__), 'dev_data'), raw_data_root=os.path.join(os.path.dirname(__file__), 'raw_data'), annotated_raw_data_root=os.path.join(os.path.dirname(__file__), 'annotated_raw_data')):
     '''
     Preprocessing routines for CyGNSSnet
 
@@ -53,7 +53,7 @@ def pre_processing(year, month, day, dev_data_dir='./dev_data', raw_data_root=os
         os.makedirs(dev_data_dir, exist_ok=True)
 
     start_date = datetime(year, month, day).strftime("%Y-%m-%dT%H:%M:%SZ")
-    end_date   = datetime(year, month, day + 1).strftime("%Y-%m-%dT%H:%M:%SZ")
+    end_date   = (datetime(year, month, day) + timedelta(1)).strftime("%Y-%m-%dT%H:%M:%SZ")
 
     for cygnss_file in os.listdir(raw_data_dir):
         if cygnss_file.startswith('cyg') and cygnss_file.endswith('.nc'):
