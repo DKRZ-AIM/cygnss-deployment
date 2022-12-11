@@ -31,7 +31,8 @@ sys.path.append('./externals/gfz_cygnss/gfz_202003')
 sys.path.append('./externals/gfz_cygnss/gfz_202003/training')
 
 from cygnssnet import ImageNet, DenseNet, CyGNSSNet, CyGNSSDataset, CyGNSSDataModule
-import plots
+from plots import make_scatterplot, make_histogram, era_average, rmse_average, today_longrunavg, today_longrunavg_bias, sample_counts, rmse_bins_era, bias_bins_era
+#import plots
 from Preprocessing import pre_processing
 
 @task
@@ -170,6 +171,18 @@ def rmse_over_time(y_bins, df_rmse):
     df_mockup = pd.concat([df_rmse, df_mockup], ignore_index=True)
     return df_mockup
 
+@task
+def make_plots(y, y_pred, date_, df_mockup, df_rmse, y_bins):
+    make_scatterplot(y, y_pred, date_)
+    make_histogram(y, y_pred, date_)
+    #era_average(y, sp_lon, sp_lat, date_)
+    #rmse_average(y, y_pred, sp_lon, sp_lat, date_)
+    today_longrunavg(df_mockup, y_bins, date_)
+    today_longrunavg_bias(df_mockup, y_bins, date_)
+    sample_counts(df_rmse, y_bins, date_)
+    rmse_bins_era(df_rmse, y_bins, date_)
+    bias_bins_era(df_rmse, y_bins, date_)
+
 @flow
 def main():
 
@@ -187,7 +200,7 @@ def main():
     model_path = os.path.join(os.path.dirname(__file__), 'externals/gfz_cygnss/trained_models/')
     model = 'ygambdos_yykDM.ckpt'
     data_path = os.path.join(os.path.dirname(__file__), 'dev_data/') #'../data' # TODO, change the path outside of code, in a separete folder
-    h5_file = h5py.File(os.path.join(data_path, os.path.join(os.path.dirname(__file__), 'test_data.h5'), 'r', rdcc_nbytes=0))
+    h5_file = h5py.File(os.path.join(data_path, 'test_data.h5'), 'r', rdcc_nbytes=0)
 
     mlflow.set_tracking_uri("sqlite:///mlruns.db") # TODO: change this to other db
     mlflow.set_experiment("cygnss")
@@ -227,16 +240,7 @@ def main():
     # make plots
     sp_lat = test_loader.dataset.v_par_eval[:, col_idx_lat]
     sp_lon = test_loader.dataset.v_par_eval[:, col_idx_lon]
-    plots.make_scatterplot(y, y_pred, date_)
-    plots.make_histogram(y, y_pred, date_)
-    #plots.era_average(y, sp_lon, sp_lat, date_)
-    #plots.rmse_average(y, y_pred, sp_lon, sp_lat, date_)
-    plots.today_longrunavg(df_mockup, y_bins, date_)
-    plots.today_longrunavg_bias(df_mockup, y_bins, date_)
-    plots.sample_counts(df_rmse, y_bins, date_)
-    plots.rmse_bins_era(df_rmse, y_bins, date_)
-    plots.bias_bins_era(df_rmse, y_bins, date_)
-    # global variables for MongoDB host (default port is 27017)
+    make_plots(y, y_pred, date_, df_mockup, df_rmse, y_bins)
     DOMAIN = 'mongodb'
     PORT = 27017
     
