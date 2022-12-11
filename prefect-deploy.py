@@ -79,15 +79,15 @@ def save_to_db(domain, port, y_pred, rmse, date_, rmse_time):
                 "bin_bias": rmse_time["bias"].tolist(),
                 "bin_counts": rmse_time["counts"].tolist(),
                 "event_date": date_,
-                "scatterplot_path": f"{os.path.dirname(__file__)}/app/plots/scatter_{date_}.png",
-                "histogram_path": f"{os.path.dirname(__file__)}/app/plots/histo_{date_}.png",
-                "era_average_path": f"{os.path.dirname(__file__)}/app/plots/era_average_{date_}.png",
-                "rmse_average_path": f"{os.path.dirname(__file__)}/app/plots/rmse_average_{date_}.png",
-                "today_longrunavg_path": f"{os.path.dirname(__file__)}/app/plots/today_longrunavg_{date_}.png",
-                "today_long_bias_path": f"{os.path.dirname(__file__)}/app/plots/today_long_bias_{date_}.png",
-                "sample_counts_path": f"{os.path.dirname(__file__)}/app/plots/sample_counts_{date_}.png",
-                "rmse_bins_era_path": f"{os.path.dirname(__file__)}/app/plots/rmse_bins_era_{date_}.png",
-                "bias_bins_era_path": f"{os.path.dirname(__file__)}/app/plots/bias_bins_era_{date_}.png",
+                "scatterplot_path": f"{os.path.dirname(__file__)}/plots/scatter_{date_}.png",
+                "histogram_path": f"{os.path.dirname(__file__)}/plots/histo_{date_}.png",
+                "era_average_path": f"{os.path.dirname(__file__)}/plots/era_average_{date_}.png",
+                "rmse_average_path": f"{os.path.dirname(__file__)}/plots/rmse_average_{date_}.png",
+                "today_longrunavg_path": f"{os.path.dirname(__file__)}/plots/today_longrunavg_{date_}.png",
+                "today_long_bias_path": f"{os.path.dirname(__file__)}/plots/today_long_bias_{date_}.png",
+                "sample_counts_path": f"{os.path.dirname(__file__)}/plots/sample_counts_{date_}.png",
+                "rmse_bins_era_path": f"{os.path.dirname(__file__)}/plots/rmse_bins_era_{date_}.png",
+                "bias_bins_era_path": f"{os.path.dirname(__file__)}/plots/bias_bins_era_{date_}.png",
                 "y_pred": y_pred.tolist()
                 }
 
@@ -247,11 +247,11 @@ def main():
 
 if __name__ == "__main__":    
 
-    deployment = Deployment.build_from_flow(
-        schedule = IntervalSchedule(interval=timedelta(days=1)),
-        flow=main,  
-        name="cygnss",  
-        work_queue_name="demo"
-    )
-    deployment.apply()
-    #main()
+    # deployment = Deployment.build_from_flow(
+    #     schedule = IntervalSchedule(interval=timedelta(days=1)),
+    #     flow=main,  
+    #     name="cygnss",  
+    #     work_queue_name="demo"
+    # )
+    # deployment.apply()
+    main()
