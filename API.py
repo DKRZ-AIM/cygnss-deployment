@@ -12,7 +12,7 @@ from urllib.request import urlretrieve
 import logging
 logging.basicConfig(stream=sys.stdout, level=logging.DEBUG)
 
-def download_raw_data(year, month, day, raw_data_root=os.path.join(os.path.dirname(__file__), 'raw_data')):
+def download_raw_data(year, month, day, raw_data_root='/app/raw_data'):
     '''
     Download raw data using API
 
