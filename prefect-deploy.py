@@ -26,9 +26,9 @@ from prefect.task_runners import SequentialTaskRunner
 from pymongo import MongoClient, errors
 from API import download_raw_data
 from datetime import datetime, timedelta, date
-sys.path.append('./externals/gfz_cygnss/')
-sys.path.append('./externals/gfz_cygnss/gfz_202003')
-sys.path.append('./externals/gfz_cygnss/gfz_202003/training')
+sys.path.append('/app/externals/gfz_cygnss/')
+sys.path.append('/app/externals/gfz_cygnss/gfz_202003')
+sys.path.append('/app/externals/gfz_cygnss/gfz_202003/training')
 
 from cygnssnet import ImageNet, DenseNet, CyGNSSNet, CyGNSSDataset, CyGNSSDataModule
 import plots
@@ -79,15 +79,15 @@ def save_to_db(domain, port, y_pred, rmse, date_, rmse_time):
                 "bin_bias": rmse_time["bias"].tolist(),
                 "bin_counts": rmse_time["counts"].tolist(),
                 "event_date": date_,
-                "scatterplot_path": f"{os.path.dirname(__file__)}/plots/scatter_{date_}.png",
-                "histogram_path": f"{os.path.dirname(__file__)}/plots/histo_{date_}.png",
-                "era_average_path": f"{os.path.dirname(__file__)}/plots/era_average_{date_}.png",
-                "rmse_average_path": f"{os.path.dirname(__file__)}/plots/rmse_average_{date_}.png",
-                "today_longrunavg_path": f"{os.path.dirname(__file__)}/plots/today_longrunavg_{date_}.png",
-                "today_long_bias_path": f"{os.path.dirname(__file__)}/plots/today_long_bias_{date_}.png",
-                "sample_counts_path": f"{os.path.dirname(__file__)}/plots/sample_counts_{date_}.png",
-                "rmse_bins_era_path": f"{os.path.dirname(__file__)}/plots/rmse_bins_era_{date_}.png",
-                "bias_bins_era_path": f"{os.path.dirname(__file__)}/plots/bias_bins_era_{date_}.png",
+                "scatterplot_path": f"/app/plots/scatter_{date_}.png",
+                "histogram_path": f"/app/plots/histo_{date_}.png",
+                "era_average_path": f"/app/plots/era_average_{date_}.png",
+                "rmse_average_path": f"/app/plots/rmse_average_{date_}.png",
+                "today_longrunavg_path": f"/app/plots/today_longrunavg_{date_}.png",
+                "today_long_bias_path": f"/app/plots/today_long_bias_{date_}.png",
+                "sample_counts_path": f"/app/plots/sample_counts_{date_}.png",
+                "rmse_bins_era_path": f"/app/plots/rmse_bins_era_{date_}.png",
+                "bias_bins_era_path": f"/app/plots/bias_bins_era_{date_}.png",
                 "y_pred": y_pred.tolist()
                 }
 
@@ -172,6 +172,20 @@ def rmse_over_time(y_bins, df_rmse):
 
 @flow
 def main():
+    # TODO: Set these settings for prefect, to make paths relative instead of global
+    # prefect config set PREFECT_LOCAL_STORAGE_PATH="/your/custom/path"
+    # prefect config set PREFECT_HOME="/your/custom/path"
+
+    # create directory for plots, if it does not exist
+    if not os.path.isdir('/app/plots'):
+        os.makedirs('/app/plots', exist_ok=True)
+
+    # write a file in app directory to check its write permission and where files are stored
+    with open("/app/app_write_test.txt", "w") as file:
+        file.write("app_write_test")
+        file.write(os.getcwd())
+        file.write(os.path.dirname(__file__))
+        print(file.name)
 
     # Define the date and pass it to the individual tasks
     download_date = date.today() - timedelta(days=10)
@@ -182,12 +196,12 @@ def main():
 
     # annotate data
     # create filtered hdf5 from preprocessing
-    pre_processing(download_date.year, download_date.month, download_date.day, os.path.join(os.path.dirname(__file__), 'dev_data'))
+    pre_processing(download_date.year, download_date.month, download_date.day,  '/app/dev_data')
 
-    model_path = os.path.join(os.path.dirname(__file__), 'externals/gfz_cygnss/trained_models/')
+    model_path = '/app/externals/gfz_cygnss/trained_models/'
     model = 'ygambdos_yykDM.ckpt'
-    data_path = os.path.join(os.path.dirname(__file__), 'dev_data/') #'../data' # TODO, change the path outside of code, in a separete folder
-    h5_file = h5py.File(os.path.join(data_path, os.path.join(os.path.dirname(__file__), 'test_data.h5'), 'r', rdcc_nbytes=0))
+    data_path = '/app/dev_data/' #'../data' # TODO, change the path outside of code, in a separete folder
+    h5_file = h5py.File(os.path.join(data_path, 'test_data.h5'), 'r', rdcc_nbytes=0)
 
     mlflow.set_tracking_uri("sqlite:///mlruns.db") # TODO: change this to other db
     mlflow.set_experiment("cygnss")
@@ -227,6 +241,8 @@ def main():
     # make plots
     sp_lat = test_loader.dataset.v_par_eval[:, col_idx_lat]
     sp_lon = test_loader.dataset.v_par_eval[:, col_idx_lon]
+
+
     plots.make_scatterplot(y, y_pred, date_)
     plots.make_histogram(y, y_pred, date_)
     #plots.era_average(y, sp_lon, sp_lat, date_)
@@ -247,11 +263,11 @@ def main():
 
 if __name__ == "__main__":    
 
-    # deployment = Deployment.build_from_flow(
-    #     schedule = IntervalSchedule(interval=timedelta(days=1)),
-    #     flow=main,  
-    #     name="cygnss",  
-    #     work_queue_name="demo"
-    # )
-    # deployment.apply()
-    main()
+    deployment = Deployment.build_from_flow(
+        schedule = IntervalSchedule(interval=timedelta(days=1)),
+        flow=main,  
+        name="cygnss",  
+        work_queue_name="demo"
+    )
+    deployment.apply()
+    # main()

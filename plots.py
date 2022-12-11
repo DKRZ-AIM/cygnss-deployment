@@ -81,9 +81,8 @@ def make_scatterplot(y_true, y_pred, date_):
     ax.set_yticks([5, 10, 15, 20, 25])
     ax.set_yticklabels([5, 10, 15, 20, 25])
 
-    fig.tight_layout()
-    plt.savefig(f'{os.path.dirname(__file__)}/plots/scatter_{date_}.png')
-    print(f'scatterplot saved to {os.path.dirname(__file__)}/plots/')
+    fig.tight_layout()    
+    plt.savefig(f'/app/plots/scatter_{date_}.png')    
 
 
 def make_histogram(y_true, y_pred, date_):
@@ -98,7 +97,8 @@ def make_histogram(y_true, y_pred, date_):
     ax.set_xticks([5, 10, 15, 20, 25])
     ax.set_xticklabels([5, 10, 15, 20, 25])
     ax.set_xlabel('ERA5 wind speed (m/s)')
-    plt.savefig(f'{os.path.dirname(__file__)}/plots/histo_{date_}.png')
+    plt.savefig(f'/app/plots/histo_{date_}.png')
+    
 
 
 def era_average(y_true, sp_lon, sp_lat, date_):
@@ -119,7 +119,7 @@ def era_average(y_true, sp_lon, sp_lat, date_):
     gl.xlabel_style = {'size': 8, 'color': 'black'}
     gl.ylabel_style = {'size': 8, 'color': 'black'}
 
-    plt.savefig(f'{os.path.dirname(__file__)}/plots/era_average_{date_}.png')
+    plt.savefig(f'/app/plots/era_average_{date_}.png')    
 
 def rmse_average(y_true, y_pred, sp_lon, sp_lat):
     xx, yy, gridded_rmse = average_to_grid2(sp_lon[:], sp_lat[:], np.abs(y_pred[:] - y_true[:]), resolution=deg)
@@ -153,7 +153,7 @@ def today_longrunavg(df_mockup, y_bins, date_):
     ax.set_xticks(range(len(y_bins)))
     ax.set_xticklabels([f'< {yy} m/s' for yy in y_bins])
 
-    plt.savefig(f'{os.path.dirname(__file__)}/plots/today_longrunavg_{date_}.png')
+    plt.savefig(f'/app/plots/today_longrunavg_{date_}.png')    
 
 def today_longrunavg_bias(df_mockup, y_bins, date_):
 
@@ -168,8 +168,8 @@ def today_longrunavg_bias(df_mockup, y_bins, date_):
 
     ax.set_xticks(range(len(y_bins)))
     ax.set_xticklabels([f'< {yy} m/s' for yy in y_bins])
-    
-    plt.savefig(f'{os.path.dirname(__file__)}/plots/today_long_bias_{date_}.png')
+        
+    plt.savefig(f'/app/plots/today_long_bias_{date_}.png')    
 
 def sample_counts(df_rmse, y_bins, date_):
 
@@ -182,7 +182,7 @@ def sample_counts(df_rmse, y_bins, date_):
     ax.set_xticks(range(len(y_bins)))
     ax.set_xticklabels([f'< {yy} m/s' for yy in y_bins])
 
-    plt.savefig(f'{os.path.dirname(__file__)}/plots/sample_counts_{date_}.png')
+    plt.savefig(f'/app/plots/sample_counts_{date_}.png')    
 
 def rmse_bins_era(df_rmse, y_bins, date_):
 
@@ -195,7 +195,7 @@ def rmse_bins_era(df_rmse, y_bins, date_):
     ax.set_xticks(range(len(y_bins)))
     ax.set_xticklabels([f'< {yy} m/s' for yy in y_bins])
 
-    plt.savefig(f'{os.path.dirname(__file__)}/plots/rmse_bins_era_{date_}.png')
+    plt.savefig(f'/app/plots/rmse_bins_era_{date_}.png')    
 
 def bias_bins_era(df_rmse, y_bins, date_):
 
@@ -207,5 +207,5 @@ def bias_bins_era(df_rmse, y_bins, date_):
 
     ax.set_xticks(range(len(y_bins)))
     ax.set_xticklabels([f'< {yy} m/s' for yy in y_bins])
- 
-    plt.savefig(f'{os.path.dirname(__file__)}/plots/bias_bins_era_{date_}.png')
+    
+    plt.savefig(f'/app/plots/bias_bins_era_{date_}.png')     
