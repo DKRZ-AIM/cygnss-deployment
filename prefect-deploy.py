@@ -213,10 +213,8 @@ def main():
 
     model_path = '/app/externals/gfz_cygnss/trained_models/'
     model = 'ygambdos_yykDM.ckpt'
-
-    data_path = '/app/dev_data/' #'../data' # TODO, change the path outside of code, in a separete folder
-
-    # h5_file = h5py.File(os.path.join(data_path, 'test_data.h5'), 'r', rdcc_nbytes=0)
+    data_path = os.path.join(os.path.dirname(__file__), 'dev_data/') #'../data' # TODO, change the path outside of code, in a separete folder
+    h5_file = h5py.File(os.path.join(data_path, 'test_data.h5'), 'r', rdcc_nbytes=0)
 
     mlflow.set_tracking_uri("sqlite:///mlruns.db") # TODO: change this to other db
     mlflow.set_experiment("cygnss")
