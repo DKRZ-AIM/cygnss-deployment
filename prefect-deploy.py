@@ -213,8 +213,15 @@ def main():
 
     model_path = '/app/externals/gfz_cygnss/trained_models/'
     model = 'ygambdos_yykDM.ckpt'
+<<<<<<< HEAD
     data_path = os.path.join(os.path.dirname(__file__), 'dev_data/') #'../data' # TODO, change the path outside of code, in a separete folder
     h5_file = h5py.File(os.path.join(data_path, 'test_data.h5'), 'r', rdcc_nbytes=0)
+=======
+
+    data_path = '/app/dev_data/' #'../data' # TODO, change the path outside of code, in a separete folder
+
+    # h5_file = h5py.File(os.path.join(data_path, 'test_data.h5'), 'r', rdcc_nbytes=0)
+>>>>>>> 955d82c8ab25a274c950436fb3f4e9a0d3fa4279
 
     mlflow.set_tracking_uri("sqlite:///mlruns.db") # TODO: change this to other db
     mlflow.set_experiment("cygnss")
@@ -255,7 +262,6 @@ def main():
     sp_lat = test_loader.dataset.v_par_eval[:, col_idx_lat]
     sp_lon = test_loader.dataset.v_par_eval[:, col_idx_lon]
     make_plots(y, y_pred, date_, df_mockup, df_rmse, y_bins)
-
     DOMAIN = 'mongodb'
     PORT = 27017
     
