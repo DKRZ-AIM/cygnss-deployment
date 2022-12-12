@@ -213,11 +213,7 @@ def main():
 
     model_path = '/app/externals/gfz_cygnss/trained_models/'
     model = 'ygambdos_yykDM.ckpt'
-<<<<<<< HEAD
     data_path = os.path.join(os.path.dirname(__file__), 'dev_data/') #'../data' # TODO, change the path outside of code, in a separete folder
-=======
-    data_path = '/app/dev_data/' #'../data' # TODO, change the path outside of code, in a separete folder
->>>>>>> 863254ecc0d7fb5774e11474e5ef09e153612224
     h5_file = h5py.File(os.path.join(data_path, 'test_data.h5'), 'r', rdcc_nbytes=0)
 
     mlflow.set_tracking_uri("sqlite:///mlruns.db") # TODO: change this to other db
@@ -258,22 +254,8 @@ def main():
     # make plots
     sp_lat = test_loader.dataset.v_par_eval[:, col_idx_lat]
     sp_lon = test_loader.dataset.v_par_eval[:, col_idx_lon]
-<<<<<<< HEAD
     make_plots(y, y_pred, date_, df_mockup, df_rmse, y_bins)
-=======
 
-
-    plots.make_scatterplot(y, y_pred, date_)
-    plots.make_histogram(y, y_pred, date_)
-    #plots.era_average(y, sp_lon, sp_lat, date_)
-    #plots.rmse_average(y, y_pred, sp_lon, sp_lat, date_)
-    plots.today_longrunavg(df_mockup, y_bins, date_)
-    plots.today_longrunavg_bias(df_mockup, y_bins, date_)
-    plots.sample_counts(df_rmse, y_bins, date_)
-    plots.rmse_bins_era(df_rmse, y_bins, date_)
-    plots.bias_bins_era(df_rmse, y_bins, date_)
-    # global variables for MongoDB host (default port is 27017)
->>>>>>> 863254ecc0d7fb5774e11474e5ef09e153612224
     DOMAIN = 'mongodb'
     PORT = 27017
     
