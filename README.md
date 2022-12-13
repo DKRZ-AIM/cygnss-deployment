@@ -53,4 +53,7 @@ notebooks/: folder with some notebooks that were created during the development
 docker_cygnss_deployment/: folder with docker files to start deployment
 ```
     
+## Data source
 
+- CYGNSS. CYGNSS Level 2 Science Data Record Version 3.1. Ver. 3.1. PO.DAAC, CA, USA. accessed 2022/2023 at 10.5067/CYGNS-L2X31
+- Copernicus Climate Change Service (C3S) (2017): ERA5: Fifth generation of ECMWF atmospheric reanalyses of the global climate . Copernicus Climate Change Service Climate Data Store (CDS), 2022/2023. https://cds.climate.copernicus.eu/cdsapp#!/home
