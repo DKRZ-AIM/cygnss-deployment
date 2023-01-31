@@ -15,7 +15,7 @@ torch
 seaborn
 pytorch-lightning==1.5.10
 cdsapi
-podaac-data-subscriber
+podaac-data-subscriber==1.12.0
 global-land-mask
 prefect==2.6.8
 sqlalchemy
