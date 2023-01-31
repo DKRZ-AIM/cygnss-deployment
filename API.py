@@ -146,12 +146,12 @@ def adapted_podaac_downloader(start_date, end_date, data_path):
     token_url = pa.token_url
 
     pa.setup_earthdata_login_auth(edl)
-    token = pa.get_token(token_url, 'podaac-subscriber', edl)
+    token = pa.get_token(token_url)
     print('Completed PODAAC authentification')
 
     provider = 'POCLOUD'
     #search_cycles = args.search_cycles [None ?]
-    short_name = 'CYGNSS_L1_V3.0'
+    short_name = 'CYGNSS_L1_V3.1'
     extensions = None
     #process_cmd = args.process_cmd [empty ?]
 
