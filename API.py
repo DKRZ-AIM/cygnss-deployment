@@ -12,11 +12,6 @@ from urllib.request import urlretrieve
 import logging
 logging.basicConfig(stream=sys.stdout, level=logging.DEBUG)
 
-import netrc
-from urllib import request
-import requests
-import json
-
 def download_raw_data(year, month, day, raw_data_root='/app/raw_data'):
     '''
     Download raw data using API
@@ -151,32 +146,7 @@ def adapted_podaac_downloader(start_date, end_date, data_path):
     token_url = pa.token_url
 
     pa.setup_earthdata_login_auth(edl)
-    #token = pa.get_token(token_url, 'podaac-subscriber', edl)
-
-    ### -- test
-    IPAddr = "127.0.0.1"  # socket.gethostbyname(hostname)
-
-    ###############################################################################
-    # GET TOKEN FROM CMR
-    ###############################################################################
-    token = ''
-    username, _, password = netrc.netrc().authenticators(edl)
-    xml = """<?xml version='1.0' encoding='utf-8'?>
-    <token><username>{}</username><password>{}</password><client_id>{}</client_id>
-    <user_ip_address>{}</user_ip_address></token>""".format(username, password, 'podaac-subscriber', IPAddr)  # noqa E501
-    headers = {'Content-Type': 'application/xml', 'Accept': 'application/json'}  # noqa E501
-    resp = requests.post(token_url, headers=headers, data=xml)
-    response_content = json.loads(resp.content)
-    token = response_content['token']['id']
-    ### --- end test
-
-
-
-
-
-
-
-
+    token = pa.get_token(token_url, 'podaac-subscriber', edl)
     print('Completed PODAAC authentification')
 
     provider = 'POCLOUD'
