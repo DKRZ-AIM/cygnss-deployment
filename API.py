@@ -146,7 +146,7 @@ def adapted_podaac_downloader(start_date, end_date, data_path):
     token_url = pa.token_url
 
     pa.setup_earthdata_login_auth(edl)
-    token = pa.get_token(token_url, 'podaac-subscriber', edl)
+    token = pa.get_token(token_url)
     print('Completed PODAAC authentification')
 
     provider = 'POCLOUD'
