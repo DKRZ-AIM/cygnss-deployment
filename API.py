@@ -13,6 +13,7 @@ import logging
 logging.basicConfig(stream=sys.stdout, level=logging.DEBUG)
 
 import netrc
+from urllib import request
 
 def download_raw_data(year, month, day, raw_data_root='/app/raw_data'):
     '''
