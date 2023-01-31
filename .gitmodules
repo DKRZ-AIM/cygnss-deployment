@@ -3,4 +3,4 @@
 	url = https://github.com/podaac/data-subscriber
 [submodule "externals/gfz_cygnss"]
 	path = externals/gfz_cygnss
-	url = git@gitlab.dkrz.de:aim/2020-03-gfz-remote-sensing.git
+	url = https://gitlab.dkrz.de/aim/cygnss-deployment.git
