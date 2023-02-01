@@ -1,0 +1,24 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: streamlit-deployment
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: streamlit
+  template:
+    metadata:
+      labels:
+        app: streamlit
+    spec:
+      containers:
+      - name: streamlit
+        image: streamlit:v1
+        imagePullPolicy: IfNotPresent
+        #resources:
+        #  limits:
+        #    memory: "8000Mi"
+        #    cpu: "1000m"
+        ports:
+        - containerPort: 8501

@@ -1,0 +1,22 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: prefect-agent-deployment
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: prefect-agent
+  template:
+    metadata:
+      labels:
+        app: prefect-agent
+    spec:
+      containers:
+      - name: prefect-agent
+        image: streamlit:v1
+        imagePullPolicy: IfNotPresent
+        resources:
+          limits:
+            memory: "8000Mi"
+            cpu: "1000m"

@@ -1,0 +1,43 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mongodb-express-deployment
+  labels:
+    app: mongodb-express
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: mongodb-express
+  template:
+    metadata:
+      labels:
+        app: mongodb-express
+    spec:
+      containers:
+      - name: mongodb-express
+        image: mongo-express:1.0.0-alpha.4
+        imagePullPolicy: IfNotPresent
+        ports:
+          - containerPort: 8081
+        volumeMounts:
+          - mountPath: /data/db
+            name: mongodb
+        env:
+          - name: ME_CONFIG_MONGODB_ADMINUSERNAME
+            valueFrom:
+              secretKeyRef:
+                name: mongodb-secret
+                key: mongo-root-username
+          - name: ME_CONFIG_MONGODB_ADMINPASSWORD
+            valueFrom:
+              secretKeyRef:
+                name: mongodb-secret
+                key: mongo-root-password
+          - name: ME_CONFIG_MONGODB_SERVER
+            valueFrom:
+              configMapKeyRef:
+                name: mongodb-configmap
+                key: database_url
+      volumes:
+      - name: mongodb
