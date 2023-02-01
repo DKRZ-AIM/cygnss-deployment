@@ -149,7 +149,7 @@ def annotate_dataset(cygnss_file, era5_file, save_dataset=False):
 
     padded_ds = xr.merge([era5_l, era5_ds, era5_r])
 
-    interp_ds = padded_ds.interp(longitude=cygnss_ds.sp_lon, latitude=cygnss_ds.sp_lat, time=cygnss_ds.ddm_timestamp_utc)
+    interp_ds = padded_ds.interp(longitude=cygnss_ds.sp_lon, latitude=cygnss_ds.sp_lat, time=cygnss_ds.ddm_timestamp_utc, method='nearest')
     
     cygnss_ds['ERA5_u10'] = interp_ds['u10']
     cygnss_ds['ERA5_v10'] = interp_ds['v10']
@@ -174,6 +174,9 @@ def annotate_dataset(cygnss_file, era5_file, save_dataset=False):
     cygnss_ds['ERA5_p140121'] = -9999
     cygnss_ds['ERA5_p140124'] = -9999
     cygnss_ds['ERA5_p140127'] = -9999
+
+    # additional condition - check for quality flag here
+    cygnss_ds = cygnss_ds.where(cygnss_ds['quality_flags'] == 4, drop=True)
     
     if save_dataset:
         cygnss_ds.to_netcdf(cygnss_file.replace('raw_data', 'annotated_raw_data'))
