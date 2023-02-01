@@ -201,7 +201,7 @@ def main():
         print(file.name)
 
     # Define the date and pass it to the individual tasks
-    download_date = date.today() - timedelta(days=10)
+    download_date = date.today() - timedelta(days=12)
     date_ = download_date.strftime("%Y-%m-%d")
 
     # Download data for the past 10th day from today, today - 10th day
