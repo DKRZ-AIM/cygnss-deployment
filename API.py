@@ -1,12 +1,11 @@
-import cdsapi
 import xarray as xr
 import numpy as np
 import os
 import sys
-sys.path.append('./externals/nasa_subscriber')
 from datetime import date, timedelta, datetime
 
 from subscriber import podaac_access as pa
+import cdsapi
 from urllib.error import HTTPError
 from urllib.request import urlretrieve
 import logging
@@ -63,7 +62,7 @@ def era5_downloader(year, month, day, raw_data_dir):
     target_data = os.path.join(raw_data_dir, 'ERA5_windspeed.nc')
     era5_data = os.path.join(raw_data_dir, 'ERA5_today.nc') 
     tomorrow_era5_data = os.path.join(raw_data_dir, 'ERA5_tomorrow.nc') 
-    cds = cdsapi.Client() 
+    cds = cdsapi.Client()
    
     # Retrieve today's data
     cds.retrieve(
