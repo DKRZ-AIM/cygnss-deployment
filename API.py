@@ -4,7 +4,7 @@ import os
 import sys
 from datetime import date, timedelta, datetime
 
-from podaac_subscriber import podaac_access as pa
+from subscriber import podaac_access as pa
 import cdsapi
 from urllib.error import HTTPError
 from urllib.request import urlretrieve
