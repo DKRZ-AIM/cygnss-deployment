@@ -20,3 +20,4 @@ global-land-mask
 prefect==2.6.8
 sqlalchemy
 dask
+shutils

@@ -1,6 +1,7 @@
 import os
 from pydoc import cli
 import sys
+import shutil
 import time
 import pandas as pd
 import numpy as np
@@ -183,6 +184,11 @@ def make_plots(y, y_pred, date_, df_mockup, df_rmse, y_bins):
     rmse_bins_era(df_rmse, y_bins, date_)
     bias_bins_era(df_rmse, y_bins, date_)
 
+@task
+def remove():
+    shutil.rmtree("/app/raw_data", ignore_errors=False, onerror=None)
+    shutil.rmtree("/app/annotated_raw_data", ignore_errors=False, onerror=None)
+
 @flow
 def main():
     # TODO: Set these settings for prefect, to make paths relative instead of global
@@ -262,6 +268,8 @@ def main():
     save_to_db(domain=DOMAIN, port=PORT, y_pred=y_pred, \
             rmse=rmse, date_=date_, rmse_time=df_rmse)
 
+    # delete dowloaded and annotated files
+    remove()
 
 if __name__ == "__main__":    
 
