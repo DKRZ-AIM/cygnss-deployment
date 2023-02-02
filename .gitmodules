@@ -1,9 +1,3 @@
-[submodule "externals/nasa_subscriber"]
-	path = externals/nasa_subscriber
-	url = https://github.com/podaac/data-subscriber
 [submodule "externals/gfz_cygnss"]
 	path = externals/gfz_cygnss
 	url = https://gitlab.dkrz.de/aim/2020-03-gfz-remote-sensing.git
-[submodule "externals/cdsapi"]
-	path = externals/cdsapi
-	url = https://github.com/ecmwf/cdsapi.git
