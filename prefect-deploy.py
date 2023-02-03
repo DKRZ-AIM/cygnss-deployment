@@ -19,7 +19,7 @@ import streamlit as st
 # TODO Fix these imports
 # from prefect.deployments import DeploymentSpec
 #from prefect.flow_runners import SubprocessFlowRunner
-from prefect.orion.schemas.schedules import IntervalSchedule
+from prefect.orion.schemas.schedules import IntervalSchedule, CronSchedule
 from prefect.deployments import Deployment
 from prefect.filesystems import RemoteFileSystem
 from prefect.infrastructure import DockerContainer
@@ -274,7 +274,7 @@ def main():
 if __name__ == "__main__":    
 
     deployment = Deployment.build_from_flow(
-        schedule = IntervalSchedule(interval=timedelta(days=1)),
+        schedule = CronSchedule('0 3 * * *'),
         flow=main,  
         name="cygnss",  
         work_queue_name="demo"
