@@ -274,7 +274,7 @@ def main():
 if __name__ == "__main__":    
 
     deployment = Deployment.build_from_flow(
-        schedule = CronSchedule('0 3 * * *'),
+        schedule = CronSchedule(cron='0 3 * * *', timezone='Europe/Berlin'),
         flow=main,  
         name="cygnss",  
         work_queue_name="demo"
