@@ -4,7 +4,7 @@ services:
   mongodb:    
     image: mongo:6.0.3 
     container_name: mongodb
-    restart: unless-stopped
+    restart: always
     volumes:
       - mongodbdata:/data/db    
     environment:
@@ -16,7 +16,7 @@ services:
   mongo-express:
     image: mongo-express:1.0.0-alpha.4  
     container_name: mongo-express
-    restart: unless-stopped
+    restart: always
     ports:
       - 8081:8081
     volumes:
@@ -32,15 +32,17 @@ services:
   streamlit:    
     user: "${UID}:${GID}"
     build: .    
+    restart: always
     volumes:
       - "./../:/app/"         
-      - ${HOME}/.netrc:/.netrc
-      - ${HOME}/.cdsapirc:/.cdsapirc
+      - /home/k/k202156/.netrc:/.netrc
+      - /home/k/k202156/.cdsapirc:/.cdsapirc
     ports:
       - "8501:8501"
       - "5000:5000"   
+      - "8001:8001"
     # command: bash -c "streamlit run dashboard.py"      
-    command: bash -c "python prefect-deploy.py && streamlit run dashboard.py && mlflow ui --backend-store-uri sqlite:///mlruns.db -p 5000"     
+    command: bash -c "python prefect-deploy.py && streamlit run dashboard.py --server.port=8001 && mlflow ui --backend-store-uri sqlite:///mlruns.db -p 5000"     
     env_file:
       - .env 
     environment:
@@ -52,6 +54,7 @@ services:
 
   orion:
     image: prefecthq/prefect:2.6.8-python3.11
+    restart: always
     ports:
       - "4200:4200"
     volumes:
@@ -71,6 +74,7 @@ services:
   
   prefect-agent:
     user: "${UID}:${GID}"
+    restart: always
     build: .
     entrypoint: ["prefect", "agent", "start", "-q", "demo"]
     volumes:
@@ -96,4 +100,5 @@ volumes:
   mongodbdata:
     driver: local
   prefect:
+
 
