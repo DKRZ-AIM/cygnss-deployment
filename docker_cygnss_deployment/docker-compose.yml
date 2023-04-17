@@ -40,9 +40,9 @@ services:
     ports:
       - "8501:8501"
       - "5000:5000"   
-      - "8001:8001"
+      - "80:80"
     # command: bash -c "streamlit run dashboard.py"      
-    command: bash -c "python prefect-deploy.py && streamlit run dashboard.py --server.port=8001 && mlflow ui --backend-store-uri sqlite:///mlruns.db -p 5000"     
+    command: bash -c "python prefect-deploy.py && streamlit run dashboard.py --server.port=80 && mlflow ui --backend-store-uri sqlite:///mlruns.db -p 5000"     
     env_file:
       - .env 
     environment:

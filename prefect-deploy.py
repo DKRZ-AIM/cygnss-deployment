@@ -188,6 +188,7 @@ def make_plots(y, y_pred, date_, df_mockup, df_rmse, y_bins):
 def remove():
     shutil.rmtree("/app/raw_data", ignore_errors=False, onerror=None)
     shutil.rmtree("/app/annotated_raw_data", ignore_errors=False, onerror=None)
+    shutil.rmtree("/app/dev_data", ignore_errors=False, onerror=None)
 
 @flow
 def main():
